@@ -30,7 +30,12 @@
   
 
   
-    <link rel="top" title="safekit 0.01 documentation" href="index.html"/> 
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="safekit 0.01 documentation" href="index.html"/>
+        <link rel="next" title="multivariate_dnn_autoencoder" href="models.html"/>
+        <link rel="prev" title="batch" href="batch.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,7 +87,13 @@
           
             
             
-                <ul class="simple">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tf_ops.html">tf_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="np_ops.html">np_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">batch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">generic_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="models.html">multivariate_dnn_autoencoder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
 </ul>
 
             
@@ -117,7 +128,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/generic_models.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/generic_models.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -130,8 +141,8 @@
   <div class="section" id="module-generic_models">
 <span id="generic-models"></span><h1>generic_models<a class="headerlink" href="#module-generic_models" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="generic_models.Loop">
-<em class="property">class </em><code class="descclassname">generic_models.</code><code class="descname">Loop</code><span class="sig-paren">(</span><em>badlimit=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#Loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.Loop" title="Permalink to this definition">¶</a></dt>
+<dt id="generic_models.EarlyStop">
+<em class="property">class </em><code class="descclassname">generic_models.</code><code class="descname">EarlyStop</code><span class="sig-paren">(</span><em>badlimit=20</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#EarlyStop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.EarlyStop" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -143,8 +154,8 @@
 </dd></dl>
 
 <dl class="class">
-<dt id="generic_models.SimpleModel">
-<em class="property">class </em><code class="descclassname">generic_models.</code><code class="descname">SimpleModel</code><span class="sig-paren">(</span><em>loss</em>, <em>pointloss</em>, <em>contrib</em>, <em>ph_dict</em>, <em>learnrate=0.01</em>, <em>resultfile=None</em>, <em>opt='adam'</em>, <em>debug=False</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#SimpleModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.SimpleModel" title="Permalink to this definition">¶</a></dt>
+<dt id="generic_models.ModelRunner">
+<em class="property">class </em><code class="descclassname">generic_models.</code><code class="descname">ModelRunner</code><span class="sig-paren">(</span><em>loss</em>, <em>ph_dict</em>, <em>learnrate=0.01</em>, <em>opt='adam'</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#ModelRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.ModelRunner" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for gradient descent training arbitrary models.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -152,7 +163,6 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>loss</strong> &#8211; Loss Tensor for gradient descent optimization (should evaluate to real number).</li>
-<li><strong>pointloss</strong> &#8211; A tensor of individual losses for each datapoint in minibatch.</li>
 <li><strong>ph_dict</strong> &#8211; A dictionary with string keys and tensorflow placeholder values.</li>
 <li><strong>learnrate</strong> &#8211; step_size for gradient descent.</li>
 <li><strong>resultfile</strong> &#8211; Where to print loss during training.</li>
@@ -164,31 +174,14 @@
 </tbody>
 </table>
 <dl class="method">
-<dt id="generic_models.SimpleModel.print_all_contrib">
-<code class="descname">print_all_contrib</code><span class="sig-paren">(</span><em>datadict</em>, <em>loss</em>, <em>pointloss</em>, <em>contrib</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#SimpleModel.print_all_contrib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.SimpleModel.print_all_contrib" title="Permalink to this definition">¶</a></dt>
+<dt id="generic_models.ModelRunner.eval">
+<code class="descname">eval</code><span class="sig-paren">(</span><em>datadict</em>, <em>eval_tensors</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#ModelRunner.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.ModelRunner.eval" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="generic_models.SimpleModel.print_results">
-<code class="descname">print_results</code><span class="sig-paren">(</span><em>datadict</em>, <em>loss</em>, <em>pointloss</em>, <em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#SimpleModel.print_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.SimpleModel.print_results" title="Permalink to this definition">¶</a></dt>
+<dt id="generic_models.ModelRunner.train_step">
+<code class="descname">train_step</code><span class="sig-paren">(</span><em>datadict</em>, <em>eval_tensors=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#ModelRunner.train_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.ModelRunner.train_step" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="generic_models.SimpleModel.train">
-<code class="descname">train</code><span class="sig-paren">(</span><em>train_data</em>, <em>loop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#SimpleModel.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.SimpleModel.train" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>train_data</strong> &#8211; A Batcher object that delivers batches of train data.</li>
-<li><strong>loop</strong> &#8211; A function or callable object that returns a boolean depending on current data and current loss.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
 
 </dd></dl>
 
@@ -216,17 +209,21 @@ depending on if model is training or evaluating.</li>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="generic_models.print_datadict">
-<code class="descclassname">generic_models.</code><code class="descname">print_datadict</code><span class="sig-paren">(</span><em>datadict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/generic_models.html#print_datadict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#generic_models.print_datadict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 
 
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="models.html" class="btn btn-neutral float-right" title="multivariate_dnn_autoencoder" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="batch.html" class="btn btn-neutral" title="batch" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

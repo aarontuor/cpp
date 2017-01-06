@@ -199,7 +199,9 @@ def diag_mvn_loss(truth, h, scale_range=1.0, variance_floor=0.1):
 
     mu, var = tf.split(1, 2, y)  # split y into two even sized matrices, each with half the columns
     var = tf.maximum(tf.exp(var),  # make the variance non-negative
-                     tf.constant(variance_floor, shape=[dim], dtype=tf.float32)) 
+                     tf.constant(variance_floor, shape=[dim], dtype=tf.float32))
+    logdet = tf.reduce_sum(tf.log(var), 1)  # MB x 1
+    loss_columns = tf.square(truth - mu) / var  # is MB x D
     return loss_columns, tf.reshape(logdet, [-1, 1])
 
 

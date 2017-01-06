@@ -48,10 +48,12 @@ def split_batch(batch, spec):
                   categories for the category in question.
     :return: A dictionary of numpy arrays of the split 2d feature array.
     """
+    assert spec['num_features'] == batch.shape[1], "Wrong number of features: spec/%s\tbatch/%s" % (spec['num_features'], batch.shape[1])
     datadict = {}
     for dataname, value in spec.iteritems():
-        if type(value) is dict:
-            datadict[dataname] = batch[:, value['index']].astype(int)
-        else:
-            datadict[dataname] = batch[:, value]
+        if dataname != 'num_features':
+            if type(value) is dict:
+                datadict[dataname] = batch[:, value['index']].astype(int)
+            else:
+                datadict[dataname] = batch[:, value]
     return datadict

@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
@@ -135,63 +138,378 @@
            <div itemprop="articleBody">
             
   <h1>Source code for batch</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">json</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<div class="viewcode-block" id="OnlineBatcher"><a class="viewcode-back" href="../batch.html#batch.OnlineBatcher">[docs]</a><span class="k">class</span> <span class="nc">OnlineBatcher</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    For batching data too large to fit into memory. Written for one pass on data!!!</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">datafile</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :param datafile: File to read lines from.</span>
-<span class="sd">        :param batch_size: Mini-batch size.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BatchBuffer"><a class="viewcode-back" href="../batch.html#batch.BatchBuffer">[docs]</a><span class="k">class</span> <span class="nc">BatchBuffer</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;For reading and buffering a stream of input data. For use with non-state swapping LSTM code.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">overlap</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">        :param pipe_name: Name of pipe to read from</span>
+<span class="sd">        :param batch_size: Number of time steps to send</span>
+<span class="sd">        :return: A BatchBuffer object that reads from the named pipe</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_name</span> <span class="o">=</span> <span class="n">pipe_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
-
-<div class="viewcode-block" id="OnlineBatcher.next_batch"><a class="viewcode-back" href="../batch.html#batch.OnlineBatcher.next_batch">[docs]</a>    <span class="k">def</span> <span class="nf">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        :return: until end of datafile, each time called,</span>
-<span class="sd">                 returns mini-batch number of lines from csv file</span>
-<span class="sd">                 as a numpy array. Returns shorter than mini-batch</span>
-<span class="sd">                 end of contents as a smaller than batch size array.</span>
-<span class="sd">                 Returns None when no more data is available(one pass batcher!!).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">matlist</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
-        <span class="n">rowtext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span>
-        <span class="n">matlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rowtext</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
-                <span class="k">break</span>
-            <span class="n">rowtext</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)])</span>
-            <span class="n">matlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rowtext</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matlist</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
-        <span class="k">return</span> <span class="n">data</span></div></div>
-
-<div class="viewcode-block" id="split_batch"><a class="viewcode-back" href="../batch.html#batch.split_batch">[docs]</a><span class="k">def</span> <span class="nf">split_batch</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    :param batch: An assembled 3 way array of data collected from the stream with shape (num_time_steps, num_users, num_features)</span>
-<span class="sd">    :param specs: A python dict containing information about which indices in the incoming data point correspond to which features.</span>
-<span class="sd">                  Entries for continuous features list the indices for the feature, while entries for categorical features</span>
-<span class="sd">                  contain a dictionary- {&#39;index&#39;: i, &#39;num_classes&#39;: c}, where i and c are the index into the datapoint, and number of distinct</span>
-<span class="sd">                  categories for the category in question.</span>
-<span class="sd">    :return: A dictionary of numpy arrays of the split 2d feature array.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">datadict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
-            <span class="n">datadict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[:,</span> <span class="n">value</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dq</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">overlap</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_overlap_window</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">datadict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[:,</span> <span class="n">value</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">datadict</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_no_overlap_window</span>
+
+<div class="viewcode-block" id="BatchBuffer.next_no_overlap_window"><a class="viewcode-back" href="../batch.html#batch.BatchBuffer.next_no_overlap_window">[docs]</a>    <span class="k">def</span> <span class="nf">next_no_overlap_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :return: Next batch_size time steps from data stream</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+            <span class="n">rowtext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span><span class="o">.</span><span class="n">readline</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">rowtext</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reached end of file.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">rowtext</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">batch</span></div>
+
+<div class="viewcode-block" id="BatchBuffer.next_overlap_window"><a class="viewcode-back" href="../batch.html#batch.BatchBuffer.next_overlap_window">[docs]</a>    <span class="k">def</span> <span class="nf">next_overlap_window</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">):</span>
+                <span class="n">rowtext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span><span class="o">.</span><span class="n">readline</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">rowtext</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reached end of file.&#39;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">rowtext</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rowtext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span><span class="o">.</span><span class="n">readline</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">rowtext</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Reached end of file.&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dq</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">rowtext</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">batch</span></div></div>
+
+
+<div class="viewcode-block" id="NewStateTrackingBatcher"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher">[docs]</a><span class="k">class</span> <span class="nc">NewStateTrackingBatcher</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Reads line by line from a pipe being fed csv format features by a feature extractor.</span>
+<span class="sd">    Keeps track of window of user history for truncated backpropagation through time with shifting set of users.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">,</span>
+                 <span class="n">specs</span><span class="p">,</span>
+                 <span class="n">batchsize</span><span class="o">=</span><span class="mi">21</span><span class="p">,</span>
+                 <span class="n">num_steps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                 <span class="n">layers</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+                 <span class="n">replay_period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">next_step</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">warm_start_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        :param pipe_name: Pipe to read from</span>
+<span class="sd">        :param specs: Path to a json file describing the delimitation of features in the csv line.</span>
+<span class="sd">        :param batchsize: The maximum number of events in a mini-batch</span>
+<span class="sd">        :param num_steps: The maximum number of events for any given user per mini-batch (window size sort of)</span>
+<span class="sd">        :param layers: A list of the sizes of hidden layers for the stacked lstm.</span>
+<span class="sd">        :param replay_period: 0 if not using replay. Otherwise get a new batch every replay period times.</span>
+<span class="sd">        :param next_step: 0 if autoencoding, 1 if next time step prediction</span>
+<span class="sd">        :param verbose: 0 if not printing, 1 if progress printing, 2 if debug printing</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specs</span> <span class="o">=</span> <span class="n">specs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_limit</span> <span class="o">=</span> <span class="n">batchsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">=</span> <span class="n">num_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_name</span> <span class="o">=</span> <span class="n">pipe_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_number</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replay_period</span> <span class="o">=</span> <span class="n">replay_period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_deque_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">next_step</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next_step</span> <span class="o">=</span> <span class="n">next_step</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_period</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Replay period cannot have a value of 1. (You cannot replay every batch)&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replay_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;num_features&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">][</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warm_start_state</span> <span class="o">=</span> <span class="n">warm_start_state</span>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.package_data"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.package_data">[docs]</a>    <span class="k">def</span> <span class="nf">package_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param batch: An assembled 3 way array of data collected from the stream with shape (num_time_steps, num_users, num_features)</span>
+<span class="sd">        :return: A dictionary of numpy arrays of the diced 3way feature array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">datadict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">dataname</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="n">datadict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">value</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">datadict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">datadict</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.blank_slate"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.blank_slate">[docs]</a>    <span class="k">def</span> <span class="nf">blank_slate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Creates and returns a zero state for one time step for 1 user</span>
+<span class="sd">        :return: A list of 1 X state_size numpy arrays the number of layers long</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">warm_start_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">warm_start_state</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">units</span><span class="p">)),</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">units</span><span class="p">))]</span> <span class="k">for</span> <span class="n">units</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.avg_state"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.avg_state">[docs]</a>    <span class="k">def</span> <span class="nf">avg_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: The average of all the most recent states for each batch entity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">avg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blank_state</span>
+        <span class="k">for</span> <span class="n">user</span><span class="p">,</span> <span class="n">dec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">avg</span> <span class="o">=</span> <span class="p">[[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dec</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">avg</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[[</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">)),</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">))]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">avg</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.event_padding"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.event_padding">[docs]</a>    <span class="k">def</span> <span class="nf">event_padding</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Creates and returns a &quot;non-event&quot; for event history padding of newly encountered user.</span>
+<span class="sd">        :param user: integer id for user</span>
+<span class="sd">        :param length: size of feature space</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+        <span class="n">padding</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">user_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="k">return</span> <span class="n">padding</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.get_new_events"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.get_new_events">[docs]</a>    <span class="k">def</span> <span class="nf">get_new_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        To got new events when not replaying old events.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>        
+        <span class="n">max_user_event_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">event_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">event_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_limit</span> <span class="ow">and</span>
+                       <span class="n">max_user_event_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">):</span>
+            <span class="n">rowtext</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipein</span><span class="o">.</span><span class="n">readline</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rowtext</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span> <span class="ow">or</span> <span class="n">rowtext</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>  <span class="c1"># placeholder for end of sequence file stream token.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">finished</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+	    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rowtext</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span> <span class="s1">&#39;Discrepancy in number of features of event </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1"> &#39;</span> \
+                                                      <span class="s1">&#39;Expected </span><span class="si">%s</span><span class="s1">, got </span><span class="si">%s</span><span class="s1">. </span><span class="se">\n</span><span class="s1">Fields: </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_number</span><span class="p">,</span>
+                                                                                             <span class="bp">self</span><span class="o">.</span><span class="n">num_features</span><span class="p">,</span>
+                                                                                             <span class="nb">len</span><span class="p">(</span><span class="n">rowtext</span><span class="p">),</span>
+                                                                                             <span class="n">rowtext</span><span class="p">)</span>
+            <span class="n">event_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">rowtext</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">user_index</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_padding</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">user</span><span class="p">)),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rowtext</span><span class="p">))</span>
+                                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_deque_size</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blank_slate</span><span class="p">()</span>
+                                             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rowtext</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">rowtext</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Non numeric string found in event </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_number</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rowtext</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">user</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">max_user_event_count</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">[</span><span class="n">user</span><span class="p">],</span> <span class="n">max_user_event_count</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_number</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.next_batch"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.next_batch">[docs]</a>    <span class="k">def</span> <span class="nf">next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :return: A dictionary with keys to match to placeholders and values of numpy matrices.</span>
+<span class="sd">                &#39;states&#39;: A structured list of numpy arrays to feed as initial state for next round of training</span>
+<span class="sd">                &#39;inputs: A three way numpy array of dimensions (timestep X user X (feature_size + target_size + meta_size))</span>
+<span class="sd">                        where meta-size is the number of fields not used in training (user_id, timestamp, etc.)</span>
+<span class="sd">                &#39;eval_indices&#39;: A num_time_steps long list of numpy vectors which contain the indices of hidden state</span>
+<span class="sd">                        outputs to evaluate on for each time step in this batch of training.</span>
+<span class="sd">                Other entries are split from the &#39;inputs&#39; matrix using the specs dictionary which describes indices of matrices to</span>
+<span class="sd">                extract.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_counter</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_new_events</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+            <span class="n">users</span> <span class="o">=</span> <span class="n">users</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_limit</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">))]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span> <span class="o">=</span> <span class="p">{</span><span class="n">user</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">}</span>
+
+        <span class="n">statelist</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">]</span>
+
+
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">user_state_list</span><span class="p">[</span><span class="n">layer</span><span class="p">][</span><span class="n">matrx</span><span class="p">]</span>
+                             <span class="k">for</span> <span class="n">user_state_list</span> <span class="ow">in</span> <span class="n">statelist</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">statelist</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">layer</span><span class="p">]))</span>
+                   <span class="k">for</span> <span class="n">matrx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">))]</span>
+
+        <span class="n">eventlist</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="p">[</span><span class="n">user</span><span class="p">])</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">]</span>
+
+        <span class="n">events</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">user_event_list</span><span class="p">[</span><span class="n">tme</span><span class="p">]</span> <span class="k">for</span> <span class="n">user_event_list</span> <span class="ow">in</span> <span class="n">eventlist</span><span class="p">]</span>
+                  <span class="k">for</span> <span class="n">tme</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_deque_size</span><span class="p">)])</span>
+
+        <span class="n">key_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">user_index</span><span class="p">:</span> <span class="n">number</span> <span class="k">for</span> <span class="n">user_index</span><span class="p">,</span> <span class="n">number</span> <span class="ow">in</span>
+                   <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">)))}</span>
+
+        <span class="c1"># Reverse the order of eval_indices to lookup correct hidden state in rnn output</span>
+        <span class="n">eval_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">key_map</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">val</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_step</span><span class="p">:</span>
+            <span class="n">eval_indices</span> <span class="o">=</span> <span class="n">eval_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">next_batch_report</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">datadict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">package_data</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+        <span class="n">datadict</span><span class="p">[</span><span class="s1">&#39;eval_indices&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eval_indices</span>
+        <span class="n">datadict</span><span class="p">[</span><span class="s1">&#39;initial_state&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">states</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_period</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">replay_counter</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_counter</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">replay_period</span>
+        <span class="k">return</span> <span class="n">datadict</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.update_states"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.update_states">[docs]</a>    <span class="k">def</span> <span class="nf">update_states</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">states</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        For updating the deque of lstm states for each user after a minibatch of training.</span>
+<span class="sd">        :param states: The unstructured list of state matrices evaluated after a train step.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># states handed to last batch that we want to preserve for popleft rule to work</span>
+        <span class="n">last_states</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">]</span>
+
+        <span class="n">num_users</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">last_states</span><span class="p">)</span>
+
+        <span class="c1"># Now we make the states really flat: A list with a cell and hidden state for each user,</span>
+        <span class="c1"># for each timestep, for each layer</span>
+        <span class="n">statelist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                                                        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">states</span><span class="p">]))</span>
+
+        <span class="c1"># Put all user states into a list for that user. Put all these lists into a list</span>
+        <span class="n">user_state_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">statelist</span><span class="p">[</span><span class="n">start</span><span class="p">::</span><span class="n">num_users</span><span class="p">]</span> <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_users</span><span class="p">)]</span>
+
+        <span class="c1"># Now make the structured list:</span>
+        <span class="c1"># [[[[[c,h], ... [c,h]], ...[[c,h], ... [c,h]]], ...[[[c,h], ... [c,h]], [[c,h], ... [c,h]]]], ...,[[[[...]]]]]</span>
+        <span class="c1">#   |----1 layer-----|</span>
+        <span class="c1">#  |---------------1 timestep----------------|</span>
+        <span class="c1"># |------------------------------1 user-----------------------------------------------------|</span>
+        <span class="n">structured_user_state_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">user</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">user_state_list</span><span class="p">):</span>
+            <span class="n">userstates</span> <span class="o">=</span> <span class="p">[</span><span class="n">last_states</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">time</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">):</span>
+                <span class="n">newtime</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
+                    <span class="n">newlayer</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">newlayer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+                        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">newtime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newlayer</span><span class="p">)</span>
+                <span class="n">userstates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">newtime</span><span class="p">)</span>
+            <span class="n">structured_user_state_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">userstates</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">user</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">structured_user_state_list</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_states_report</span><span class="p">(</span><span class="n">last_states</span><span class="p">,</span> <span class="n">statelist</span><span class="p">,</span> <span class="n">user_state_list</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.update_states_report"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.update_states_report">[docs]</a>    <span class="k">def</span> <span class="nf">update_states_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">last_states</span><span class="p">,</span> <span class="n">statelist</span><span class="p">,</span> <span class="n">user_state_list</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=================BEGIN STATE UPDATING================================&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;states handed to last batch:&#39;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">last_states</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;fully flattened states:&#39;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">statelist</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;states grouped by users:&#39;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="n">user_state_list</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state_map:&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">pprint</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;====================END STATE UPDATING===========================</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="NewStateTrackingBatcher.next_batch_report"><a class="viewcode-back" href="../batch.html#batch.NewStateTrackingBatcher.next_batch_report">[docs]</a>    <span class="k">def</span> <span class="nf">next_batch_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==============BEGIN BATCHING============================&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;new_event_count: </span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;state_map:&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">pprint</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=========================END BATCHING====================================&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;event_map:&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_map</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">pprint</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;new_event_count:&#39;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_event_count</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;num_steps: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_steps</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="derive_toy_lanl_features"><a class="viewcode-back" href="../batch.html#batch.derive_toy_lanl_features">[docs]</a><span class="k">def</span> <span class="nf">derive_toy_lanl_features</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stream data from the source, do necessary processing, and feature extraction.</span>
+<span class="sd">      Write each piece of processed data to a pipe. For mocking streaming.</span>
+
+<span class="sd">    :param datafile: Data source. Treat this as a stream.</span>
+<span class="sd">    :param pipe_name: The name of the pipe to write the processed feature vectors to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pipeout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_WRONLY</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">datafile</span><span class="p">)</span> <span class="k">as</span> <span class="n">proc</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">proc</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pipeout</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pipeout</span><span class="p">,</span> <span class="s1">&#39;X</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="derive_cert_features"><a class="viewcode-back" href="../batch.html#batch.derive_cert_features">[docs]</a><span class="k">def</span> <span class="nf">derive_cert_features</span><span class="p">(</span><span class="n">stream_name</span><span class="p">,</span> <span class="n">pipe_name</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Place holder for feature derivation function</span>
+<span class="sd">    :param stream_name: Where data is coming from (in this case it is a file. Could be a socket or pipe)</span>
+<span class="sd">    :param pipe_name: Whatever the pipe is called</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">pipeout</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">pipe_name</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_WRONLY</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">stream_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">cert</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">cert</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pipeout</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pipeout</span><span class="p">,</span> <span class="s1">&#39;X</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
 </pre></div>
 
            </div>

@@ -30,7 +30,12 @@
   
 
   
-    <link rel="top" title="safekit 0.01 documentation" href="index.html"/> 
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="safekit 0.01 documentation" href="index.html"/>
+        <link rel="next" title="features" href="features.html"/>
+        <link rel="prev" title="generic_models" href="generic_models.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,7 +87,13 @@
           
             
             
-                <ul class="simple">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tf_ops.html">tf_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="np_ops.html">np_ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="batch.html">batch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generic_models.html">generic_models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">multivariate_dnn_autoencoder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
 </ul>
 
             
@@ -117,7 +128,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/models.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/models.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -129,17 +140,15 @@
             
   <div class="section" id="multivariate-dnn-autoencoder">
 <h1>multivariate_dnn_autoencoder<a class="headerlink" href="#multivariate-dnn-autoencoder" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-python"><div class="highlight"><pre><span></span>usage: multivariate_dnn_autoencoder [-h] [-learnrate LEARNRATE]
-                                    [-layers LAYERS [LAYERS ...]] [-mb MB]
-                                    [-act ACT] [-bn] [-keep_prob KEEP_PROB]
-                                    [-debug] [-dist DIST]
-                                    [-variance_floor VARIANCE_FLOOR]
-                                    [-scalerange SCALERANGE] [-opt OPT]
-                                    [-maxbadcount MAXBADCOUNT]
-                                    [-embedding_ratio EMBEDDING_RATIO]
-                                    [-min_embed MIN_EMBED]
-                                    [-max_embed MAX_EMBED] [-verbose VERBOSE]
-                                    datafile results dataspecs
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">multivariate_dnn_autoencoder</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">learnrate</span> <span class="n">LEARNRATE</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">layers</span> <span class="n">LAYERS</span> <span class="p">[</span><span class="n">LAYERS</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">mb</span> <span class="n">MB</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">act</span> <span class="n">ACT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">bn</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">keep_prob</span> <span class="n">KEEP_PROB</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">debug</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">dist</span> <span class="n">DIST</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">maxbadcount</span> <span class="n">MAXBADCOUNT</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">embedding_ratio</span> <span class="n">EMBEDDING_RATIO</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">min_embed</span> <span class="n">MIN_EMBED</span><span class="p">]</span>
+                                    <span class="p">[</span><span class="o">-</span><span class="n">max_embed</span> <span class="n">MAX_EMBED</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">verbose</span> <span class="n">VERBOSE</span><span class="p">]</span>
+                                    <span class="n">datafile</span> <span class="n">results_folder</span> <span class="n">dataspecs</span>
 </pre></div>
 </div>
 <dl class="docutils">
@@ -152,7 +161,7 @@
 <kbd>datafile</kbd></td>
 <td>The csv data file for our unsupervised training.fields: day, user, redcount, [count1, count2, ...., count408]</td></tr>
 <tr><td class="option-group">
-<kbd>results</kbd></td>
+<kbd>results_folder</kbd></td>
 <td>The folder to print results to.</td></tr>
 <tr><td class="option-group">
 <kbd>dataspecs</kbd></td>
@@ -190,18 +199,7 @@
 <td>Use this flag to print feed dictionary contents and dimensions.</td></tr>
 <tr><td class="option-group">
 <kbd><span class="option">-dist=diag</span></kbd></td>
-<td>&#8220;diag&#8221; or &#8220;ident&#8221;. Describes whether to model multivariate guassian with identity, or abitrary diagonal covariance matrix.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-variance_floor=0.1</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>For diagonal covariance matrix loss calculation.</td></tr>
-<tr><td class="option-group" colspan="2">
-<kbd><span class="option">-scalerange=1.0</span></kbd></td>
-</tr>
-<tr><td>&nbsp;</td><td>Extra scaling on top of fan_in scaling.</td></tr>
-<tr><td class="option-group">
-<kbd><span class="option">-opt=adam</span></kbd></td>
-<td>Optimization strategy. {&#8220;grad&#8221;, &#8220;adam&#8221;}</td></tr>
+<td>&#8220;diag&#8221; or &#8220;ident&#8221;. Describes whether to model multivariate guassian with identity, or arbitrary diagonal covariance matrix.</td></tr>
 <tr><td class="option-group" colspan="2">
 <kbd><span class="option">-maxbadcount=20</span></kbd></td>
 </tr>
@@ -230,6 +228,15 @@
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="features.html" class="btn btn-neutral float-right" title="features" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="generic_models.html" class="btn btn-neutral" title="generic_models" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
