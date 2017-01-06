@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>multivariate_dnn_autoencoder &mdash; safekit 0.01 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="safekit 0.01 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> safekit
+          
+
+          
+            
+            <img src="_static/eye.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.01
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="simple">
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">safekit</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>multivariate_dnn_autoencoder</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/models.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="multivariate-dnn-autoencoder">
+<h1>multivariate_dnn_autoencoder<a class="headerlink" href="#multivariate-dnn-autoencoder" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-python"><div class="highlight"><pre><span></span>usage: multivariate_dnn_autoencoder [-h] [-learnrate LEARNRATE]
+                                    [-layers LAYERS [LAYERS ...]] [-mb MB]
+                                    [-act ACT] [-bn] [-keep_prob KEEP_PROB]
+                                    [-debug] [-dist DIST]
+                                    [-variance_floor VARIANCE_FLOOR]
+                                    [-scalerange SCALERANGE] [-opt OPT]
+                                    [-maxbadcount MAXBADCOUNT]
+                                    [-embedding_ratio EMBEDDING_RATIO]
+                                    [-min_embed MIN_EMBED]
+                                    [-max_embed MAX_EMBED] [-verbose VERBOSE]
+                                    datafile results dataspecs
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Positional arguments:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd>datafile</kbd></td>
+<td>The csv data file for our unsupervised training.fields: day, user, redcount, [count1, count2, ...., count408]</td></tr>
+<tr><td class="option-group">
+<kbd>results</kbd></td>
+<td>The folder to print results to.</td></tr>
+<tr><td class="option-group">
+<kbd>dataspecs</kbd></td>
+<td>Filename of json file with specification of feature indices.</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-learnrate=0.001</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Step size for gradient descent.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-layers=[100, 100, 408]</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>A list of hidden layer sizes.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-mb=256</span></kbd></td>
+<td>The mini batch size for stochastic gradient descent.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-act=tanh</span></kbd></td>
+<td>May be &#8220;tanh&#8221; or &#8220;relu&#8221;</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-bn=False</span></kbd></td>
+<td>Use this flag if using batch normalization.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-keep_prob</span></kbd></td>
+<td>Percent of nodes to keep for dropout layers.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-debug=False</span></kbd></td>
+<td>Use this flag to print feed dictionary contents and dimensions.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-dist=diag</span></kbd></td>
+<td>&#8220;diag&#8221; or &#8220;ident&#8221;. Describes whether to model multivariate guassian with identity, or abitrary diagonal covariance matrix.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-variance_floor=0.1</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>For diagonal covariance matrix loss calculation.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-scalerange=1.0</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Extra scaling on top of fan_in scaling.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-opt=adam</span></kbd></td>
+<td>Optimization strategy. {&#8220;grad&#8221;, &#8220;adam&#8221;}</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-maxbadcount=20</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Threshold for early stopping.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-embedding_ratio=0.75</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>For determining size of embeddings for categorical features.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-min_embed=2</span></kbd></td>
+<td>Minimum size for embeddings of categorical features.</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-max_embed=1000</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>Maximum size for embeddings of categorical features.</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-verbose=0</span></kbd></td>
+<td>1 to print full loss contributors.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, safekit_authors.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.01',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

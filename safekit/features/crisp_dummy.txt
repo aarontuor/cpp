@@ -1,0 +1,109 @@
+FLO data
+
+  Column  |           Type           | Modifiers | Storage  | Stats target | Description 
+----------+--------------------------+-----------+----------+--------------+-------------
+ filename | text                     | not null  | extended |              | 
+ recnum   | integer                  | not null  | plain    |              | 
+ timet    | timestamp with time zone |           | plain    |              | 
+ site     | text                     |           | extended |              | 
+ proto    | smallint                 |           | plain    |              | 
+ saddr    | inet                     |           | plain    |              | 
+ daddr    | inet                     |           | plain    |              | 
+ sport    | integer                  |           | plain    |              | 
+ dport    | integer                  |           | plain    |              | 
+ mf       | smallint                 |           | plain    |              | 
+ cf       | smallint                 |           | plain    |              | 
+ dur      | numeric                  |           | main     |              | 
+ sdata    | bigint                   |           | plain    |              | 
+ ddata    | bigint                   |           | plain    |              | 
+ sbyte    | bigint                   |           | plain    |              | 
+ dbyte    | bigint                   |           | plain    |              | 
+ spkt     | integer                  |           | plain    |              | 
+ dpkt     | integer                  |           | plain    |              | 
+ siopt    | numeric                  |           | main     |              | 
+ diopt    | numeric                  |           | main     |              | 
+ stopt    | numeric                  |           | main     |              | 
+ dtopt    | numeric                  |           | main     |              | 
+ forced   | smallint                 |           | plain    |              | 
+ swire    | bigint                   |           | plain    |              | 
+ dwire    | bigint                   |           | plain    |              | 
+ scap     | bigint                   |           | plain    |              | 
+ dcap     | bigint                   |           | plain    |              | 
+ ssite    | text                     |           | extended |              | 
+ dsite    | text                     |           | extended |              | 
+ sflags   | character varying(2)     |           | extended |              | 
+ dflags   | character varying(2)     |           | extended |              | 
+ flags    | text                     |           | extended |              | 
+ sfseq    | numeric                  |           | main     |              | 
+ dfseq    | numeric                  |           | main     |              | 
+ slseq    | numeric                  |           | main     |              | 
+ dlseq    | numeric                  |           | main     |              | 
+ category | text                     |           | extended |              | 
+ scc      | character varying(2)     |           | extended |              | 
+ sorg     | text                     |           | extended |              | 
+ slat     | numeric                  |           | main     |              | 
+ slon     | numeric                  |           | main     |              | 
+ dcc      | character varying(2)     |           | extended |              | 
+ dorg     | text                     |           | extended |              | 
+ dlat     | numeric                  |           | main     |              | 
+ dlon     | numeric                  |           | main     |              | 
+ distance | numeric                  |           | main     |              | 
+
+filename,recnum,timet,site,proto,saddr,daddr,sport,dport,mf,cf,dur,sdata,ddata,sbyte,dbyte,spkt,dpkt,siopt,diopt,stopt,dtopt,forced,swire,dwire,scap,dcap,ssite,dsite,sflags,dflags,flags,sfseq,dfseq,slseq,dlseq,category,scc,sorg,slat,slon,dcc,dorg,dlat,dlon,distance
+20161001234837-site03-flo30.dat,23074,2016-10-02 00:01:10.022098+00,site03,17,127.0.0.1,127.254.254.254,53,17669,0,0,0.000000,315,0,357,0,1,0,0,0,0,0,0,357,0,96,0,,,00,00,,0,0,0,0,OOB-ONEWAY,US,my company here,41.60778,-72.7701,US,another company here,32.0634,-31.2393,2505.469603737639
+20161001234837-site03-flo30.dat,24642,2016-10-02 00:01:21.054514+00,site03,6,127.0.0.1,127.254.254.254,51564,443,0,0,24.370443,643,0,1153,0,9,0,0,0,2,0,0,1183,0,624,0,,,1f,00,+02+10+18+10+18+10+11+14+04,183374003,0,183374648,0,OOB-CONFLICTING-FLGS,US,my company here,14.60778,-24.7701,US,another company here,32.01823,-32.46108,305.0345527375033
+20161001234837-site03-flo30.dat,24674,2016-10-02 00:01:23.17274+00,site03,17,127.0.0.1,127.254.254.254,53,14873,0,0,0.000000,115,0,157,0,1,0,0,0,0,0,0,157,0,96,0,,,00,00,,0,0,0,0,OOB-ONEWAY,US,my company here,14.60778,-24.7701,IN,another company here,32.94206,32.83544,7710.378783913255
+20161001234837-site03-flo30.dat,24775,2016-10-02 00:01:24.89471+00,site03,17,127.0.0.1,127.254.254.254,53,34789,0,0,0.000000,313,0,355,0,1,0,0,0,0,0,0,355,0,96,0,,,00,00,,0,0,0,0,OOB-ONEWAY,US,my company here,14.60778,-24.7701,US,another company here,32.0634,-32.2393,2505.469603737639
+20161001234837-site03-flo30.dat,18986,2016-10-02 00:00:40.411795+00,site03,17,127.0.0.1,127.254.254.254,53,15747,0,0,0.000000,315,0,357,0,1,0,0,0,0,0,0,357,0,96,0,,,00,00,,0,0,0,0,OOB-ONEWAY,US,my company here,14.60778,-24.7701,US,another company here,32.0634,-32.2393,2505.469603737639
+
+
+aggregate data
+
+        Column         |           Type           | Modifiers | Storage  | Stats target | Description 
+-----------------------+--------------------------+-----------+----------+--------------+-------------
+ day                   | date                     | not null  | plain    |              | 
+ period                | integer                  | not null  | plain    |              | 
+ saddr                 | inet                     |           | plain    |              | 
+ daddr                 | inet                     |           | plain    |              | 
+ dport                 | integer                  |           | plain    |              | 
+ proto                 | smallint                 |           | plain    |              | 
+ category              | text                     |           | extended |              | 
+ deployment            | text                     | not null  | extended |              | 
+ site                  | text                     | not null  | extended |              | 
+ times_seen            | integer                  | not null  | plain    |              | 
+ first_seen_dtm        | timestamp with time zone |           | plain    |              | 
+ last_seen_dtm         | timestamp with time zone |           | plain    |              | 
+ times_alerted         | integer                  |           | plain    |              | 
+ first_alerted_dtm     | timestamp with time zone |           | plain    |              | 
+ last_alerted_dtm      | timestamp with time zone |           | plain    |              | 
+ sum_spayload          | numeric                  |           | main     |              | 
+ sum_dpayload          | numeric                  |           | main     |              | 
+ sum_sbytes            | numeric(20,0)            |           | main     |              | 
+ sum_dbytes            | numeric(20,0)            |           | main     |              | 
+ sum_spackets          | numeric(20,0)            |           | main     |              | 
+ sum_dpackets          | numeric(20,0)            |           | main     |              | 
+ sum_duration          | numeric(35,6)            |           | main     |              | 
+ min_duration          | numeric(10,6)            |           | main     |              | 
+ max_duration          | numeric(10,6)            |           | main     |              | 
+ scountrycode          | character varying(2)     |           | extended |              | 
+ sorganization         | text                     |           | extended |              | 
+ slat                  | double precision         |           | plain    |              | 
+ slong                 | double precision         |           | plain    |              | 
+ dcountrycode          | character varying(2)     |           | extended |              | 
+ dorganization         | text                     |           | extended |              | 
+ dlat                  | double precision         |           | plain    |              | 
+ dlong                 | double precision         |           | plain    |              | 
+ distance              | double precision         |           | plain    |              | 
+ src_internal          | character varying(1)     |           | extended |              | 
+ dst_internal          | character varying(1)     |           | extended |              | 
+ bucket                | character varying(1)     |           | extended |              | 
+ virtual_site          | text                     |           | extended |              | 
+ covmap_src_deployment | text                     |           | extended |              | 
+ covmap_dst_deployment | text                     |           | extended |              | 
+
+day,period,saddr,daddr,dport,proto,category,deployment,site,times_seen,first_seen_dtm,last_seen_dtm,times_alerted,first_alerted_dtm,last_alerted_dtm,sum_spayload,sum_dpayload,sum_sbytes,sum_dbytes,sum_spackets,sum_dpackets,sum_duration,min_duration,max_duration,scountrycode,sorganization,slat,slong,dcountrycode,dorganization,dlat,dlong,distance,src_internal,dst_internal,bucket,virtual_site,covmap_src_deployment,covmap_dst_deployment
+2016-08-28,20160828,127.0.0.1,127.254.254.254,0,1,SES-OP,site01,site01,1,2016-08-28 07:50:45.736451+00,2016-08-28 07:50:45.736451+00,,,,0,0,71,0,1,0,0.000000,0.000000,0.000000,FR,another company here,5.6917,3.1752,US,my company here,10.0645,-110.08415,5577.94819558298,,,,,,
+2016-08-28,20160828,127.0.0.1,127.254.254.254,443,6,SSL,site01,site01,7,2016-08-28 11:58:37.830015+00,2016-08-28 13:02:29.699049+00,,,,5637,60249,12183,64733,119,82,226.158192,0.264668,151.791580,..,internet assigned numbers authority,0,0,US,my company here,13.01823,-21.46108,5547.44023399269,,,,,,
+2016-08-28,20160828,127.0.0.1,127.254.254.254,53,17,DNS-RQ,site01,site01,2,2016-08-28 09:39:48.686319+00,2016-08-28 16:28:47.804424+00,,,,106,171,190,255,2,2,0.003233,0.001431,0.001802,US,another company here,40.36914,-80.7126,US,my company here,41.15604,-81.63774,72.8006292523717,,,,,,
+2016-08-28,20160828,127.0.0.1,127.254.254.254,0,1,SES-OP,site01,site01,1,2016-08-28 12:13:19.670621+00,2016-08-28 12:13:19.670621+00,,,,0,0,74,0,1,0,0.000000,0.000000,0.000000,PL,another company here,5.1212,7.0427,US,my company here,3.0645,-110.08415,5950.7566369948,,,,,,
+2016-08-28,20160828,127.0.0.1,127.254.254.254,80,6,WEB,site01,site01,6,2016-08-28 16:50:04.921773+00,2016-08-28 16:50:12.919+00,,,,29769,182049,37833,190359,148,153,47.627040,0.979839,11.248943,US,my company here,3.29172,-8.01424,US,another company here,3.15627,-9.99375,841.523703770498,,,,,,
