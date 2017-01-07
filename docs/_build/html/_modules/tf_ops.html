@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
@@ -90,7 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tf_ops.html">tf_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../np_ops.html">np_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../batch.html">batch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generic_models.html">generic_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_training_utils.html">graph_training_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../models.html">multivariate_dnn_autoencoder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">features</a></li>
 </ul>
@@ -138,43 +135,16 @@
            <div itemprop="articleBody">
             
   <h1>Source code for tf_ops</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions for building tensorflow computational graph models. RNN models,</span>
+<span class="sd">and tensorflow loss functions will be added to this module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
 <span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">from</span> <span class="nn">np_ops</span> <span class="k">import</span> <span class="n">fan_scale</span>
+<span class="kn">from</span> <span class="nn">np_ops</span> <span class="kn">import</span> <span class="n">fan_scale</span>
 
-
-<div class="viewcode-block" id="weights"><a class="viewcode-back" href="../tf_ops.html#tf_ops.weights">[docs]</a><span class="k">def</span> <span class="nf">weights</span><span class="p">(</span><span class="n">distribution</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">initrange</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span>
-            <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;weights&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Wrapper parameterizing common constructions of tf.Variables.</span>
-
-<span class="sd">    :param distribution: A string identifying distribution &#39;tnorm&#39; for truncated normal, &#39;rnorm&#39; for random normal, &#39;constant&#39; for constant, &#39;uniform&#39; for uniform.</span>
-<span class="sd">    :param shape: Shape of weight tensor.</span>
-<span class="sd">    :param dtype: dtype for weights</span>
-<span class="sd">    :param initrange: Scales standard normal and truncated normal, value of constant dist., and range of uniform dist. [-initrange, initrange].</span>
-<span class="sd">    :param seed: For reproducible results.</span>
-<span class="sd">    :param l2: Floating point number determining degree of of l2 regularization for these weights in gradient descent update.</span>
-<span class="sd">    :param name: For variable scope.</span>
-<span class="sd">    :return: A tf.Variable.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="n">distribution</span> <span class="o">==</span> <span class="s1">&#39;norm&#39;</span><span class="p">:</span>
-        <span class="n">wghts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">initrange</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">random_normal</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">distribution</span> <span class="o">==</span> <span class="s1">&#39;tnorm&#39;</span><span class="p">:</span>
-        <span class="n">wghts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">initrange</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">distribution</span> <span class="o">==</span> <span class="s1">&#39;uniform&#39;</span><span class="p">:</span>
-        <span class="n">wghts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random_uniform</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="n">initrange</span><span class="p">,</span> <span class="n">initrange</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">seed</span><span class="p">))</span>
-    <span class="k">elif</span> <span class="n">distribution</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span><span class="p">:</span>
-        <span class="n">wghts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">initrange</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Argument &#39;distribution takes values &#39;norm&#39;, &#39;tnorm&#39;, &#39;uniform&#39;, &#39;constant&#39;, &quot;</span>
-                          <span class="s2">&quot;Received </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">distribution</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">l2</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
-        <span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="s1">&#39;losses&#39;</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">l2_loss</span><span class="p">(</span><span class="n">wghts</span><span class="p">),</span> <span class="n">l2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;weight_loss&#39;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">wghts</span></div>
-
-
-<div class="viewcode-block" id="batch_normalize"><a class="viewcode-back" href="../tf_ops.html#tf_ops.batch_normalize">[docs]</a><span class="k">def</span> <span class="nf">batch_normalize</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">decay</span><span class="o">=</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;batch_norm&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="batch_normalize"><a class="viewcode-back" href="../tf_ops.html#tf_ops.batch_normalize">[docs]</a><span class="k">def</span> <span class="nf">batch_normalize</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span> <span class="n">decay</span><span class="o">=</span><span class="mf">0.999</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Batch Normalization:</span>
 <span class="sd">    `Batch Normalization Accelerating Deep Network Training by Reducing Internal Covariate Shift`_</span>
@@ -190,23 +160,23 @@
 <span class="sd">        bn_deciders = {decider:[train] for decider in tf.get_collection(&#39;bn_deciders&#39;)}</span>
 <span class="sd">        feed_dict.update(bn_deciders)</span>
 
-<span class="sd">    :param tensor_in: input Tensor_</span>
+<span class="sd">    :param tensor_in: Input Tensor.</span>
 <span class="sd">    :param epsilon: A float number to avoid being divided by 0.</span>
-<span class="sd">    :param name: For variable_scope_</span>
+<span class="sd">    :param decay: For exponential decay estimate of running mean and variance.</span>
 <span class="sd">    :return: Tensor with variance bounded by a unit and mean of zero according to the batch.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">is_training</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span> <span class="c1"># [1] or [0], Using a placeholder to decide which</span>
+    <span class="n">is_training</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="bp">None</span><span class="p">])</span> <span class="c1"># [1] or [0], Using a placeholder to decide which</span>
                                           <span class="c1"># statistics to use for normalization allows</span>
                                           <span class="c1"># either the running stats or the batch stats to</span>
                                           <span class="c1"># be used without rebuilding the graph.</span>
     <span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="s1">&#39;bn_deciders&#39;</span><span class="p">,</span> <span class="n">is_training</span><span class="p">)</span>
 
-    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">pop_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">pop_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">trainable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">pop_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]),</span> <span class="n">trainable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
     <span class="c1"># calculate batch mean/var and running mean/var</span>
-    <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_variance</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">batch_mean</span><span class="p">,</span> <span class="n">batch_variance</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">moments</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="c1"># The running mean/variance is updated when is_training == 1.</span>
     <span class="n">running_mean</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">pop_mean</span><span class="p">,</span>
@@ -221,23 +191,22 @@
     <span class="n">variance</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">embedding_lookup</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">pack</span><span class="p">([</span><span class="n">running_var</span><span class="p">,</span> <span class="n">batch_variance</span><span class="p">]),</span> <span class="n">is_training</span><span class="p">)</span>
 
     <span class="n">shape</span> <span class="o">=</span> <span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
-    <span class="n">gamma</span> <span class="o">=</span> <span class="n">weights</span><span class="p">(</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">initrange</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_gamma&#39;</span><span class="p">)</span>
-    <span class="n">beta</span> <span class="o">=</span> <span class="n">weights</span><span class="p">(</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">initrange</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_beta&#39;</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gamma&#39;</span><span class="p">))</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;beta&#39;</span><span class="p">))</span>
 
     <span class="c1"># Batch Norm Transform</span>
-    <span class="n">inv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">rsqrt</span><span class="p">(</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">variance</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">inv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">rsqrt</span><span class="p">(</span><span class="n">epsilon</span> <span class="o">+</span> <span class="n">variance</span><span class="p">)</span>
     <span class="n">tensor_in</span> <span class="o">=</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">tensor_in</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">*</span> <span class="n">inv</span> <span class="o">+</span> <span class="n">gamma</span>
 
     <span class="k">return</span> <span class="n">tensor_in</span></div>
 
 
-<div class="viewcode-block" id="dropout"><a class="viewcode-back" href="../tf_ops.html#tf_ops.dropout">[docs]</a><span class="k">def</span> <span class="nf">dropout</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Dropout&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="dropout"><a class="viewcode-back" href="../tf_ops.html#tf_ops.dropout">[docs]</a><span class="k">def</span> <span class="nf">dropout</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Adds dropout node.</span>
-<span class="sd">    :param tensor_in: Input tensor_.</span>
+<span class="sd">    :param tensor_in: Input tensor.</span>
 <span class="sd">    :param prob: The percent of units to keep.</span>
-<span class="sd">    :param name: A name for the tensor.</span>
-<span class="sd">    :return: Tensor_ of the same shape of *tensor_in*.</span>
+<span class="sd">    :return: Tensor of the same shape of *tensor_in*.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
         <span class="n">keep_prob</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
@@ -245,14 +214,14 @@
     <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">tensor_in</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="dnn"><a class="viewcode-back" href="../tf_ops.html#tf_ops.dnn">[docs]</a><span class="k">def</span> <span class="nf">dnn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">408</span><span class="p">],</span> <span class="n">act</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bn</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keep_prob</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;nnet&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="dnn"><a class="viewcode-back" href="../tf_ops.html#tf_ops.dnn">[docs]</a><span class="k">def</span> <span class="nf">dnn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">408</span><span class="p">],</span> <span class="n">act</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bn</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">keep_prob</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;nnet&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An arbitrarily deep neural network. Output has non-linear activation.</span>
 
 <span class="sd">    :param x: Input to the network.</span>
 <span class="sd">    :param layers: List of sizes of network layers.</span>
 <span class="sd">    :param act: Activation function to produce hidden layers of neural network.</span>
-<span class="sd">    :param scale_range: Scaling factor for initial range of weights (Set to 1/sqrt(fan_in).</span>
+<span class="sd">    :param scale_range: Scaling factor for initial range of weights (Set to 1/sqrt(fan_in) for tanh, sqrt(2/fan_in) for relu.</span>
 <span class="sd">    :param bn: Whether to use batch normalization.</span>
 <span class="sd">    :param keep_prob: The percent of nodes to keep in dropout layers.</span>
 <span class="sd">    :param name: For naming and variable scope.</span>
@@ -267,27 +236,33 @@
             <span class="n">fan_in</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">fan_scale</span><span class="p">(</span><span class="n">scale_range</span><span class="p">,</span> <span class="n">act</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">],</span>
                                                      <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                                                     <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;W&#39;</span><span class="p">))</span>
+                                                     <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;W&#39;</span><span class="p">))</span>
             <span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_weights&#39;</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
             <span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">hidden_size</span><span class="p">]))</span>
             <span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_bias&#39;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
             <span class="k">if</span> <span class="n">bn</span><span class="p">:</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">batch_normalize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_bn&#39;</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">batch_normalize</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">act</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;h&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">))</span> <span class="c1"># The hidden layer</span>
             <span class="n">tf</span><span class="o">.</span><span class="n">add_to_collection</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_activation&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">keep_prob</span><span class="p">:</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">dropout</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_dropouts&#39;</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">dropout</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">keep_prob</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span></div>
 
+<span class="c1"># ============================================================</span>
+<span class="c1"># ================ LOSS FUNCTIONS ============================</span>
+<span class="c1"># ============================================================</span>
 
 <div class="viewcode-block" id="softmax_dist_loss"><a class="viewcode-back" href="../tf_ops.html#tf_ops.softmax_dist_loss">[docs]</a><span class="k">def</span> <span class="nf">softmax_dist_loss</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function paired with a tensorflow optimizer is multinomial logistic regression.</span>
+<span class="sd">    It is designed for cotegorical predictions.</span>
 
-<span class="sd">    :param truth:</span>
-<span class="sd">    :param h:</span>
-<span class="sd">    :param scale_range:</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :param truth: A tensorflow vector tensor of integer class labels.</span>
+<span class="sd">    :param h: A placeholder if doing simple multinomial logistic regression, or the output of some neural network.</span>
+<span class="sd">    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</span>
+<span class="sd">    tanh activation and sqrt(2/fan_in) for relu activation.</span>
+<span class="sd">    :return: Cross-entropy of true distribution vs. predicted distribution.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fan_in</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">U</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">fan_scale</span><span class="p">(</span><span class="n">scale_range</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">tanh</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="n">fan_in</span><span class="p">,</span> <span class="n">dimension</span><span class="p">],</span>
@@ -303,11 +278,14 @@
 
 <div class="viewcode-block" id="eyed_mvn_loss"><a class="viewcode-back" href="../tf_ops.html#tf_ops.eyed_mvn_loss">[docs]</a><span class="k">def</span> <span class="nf">eyed_mvn_loss</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes the output of a neural network after it&#39;s last activation, performs an affine transform,</span>
+<span class="sd">    and returns the squared error of this result and the target.</span>
 
-<span class="sd">    :param truth:</span>
-<span class="sd">    :param h:</span>
-<span class="sd">    :param scale_range:</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :param truth: A tensor of target vectors.</span>
+<span class="sd">    :param h: The output of a neural network post activation.</span>
+<span class="sd">    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</span>
+<span class="sd">    tanh activation and sqrt(2/fan_in) for relu activation.</span>
+<span class="sd">    :return: (tf.Tensor, None) squared_error, None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fan_in</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">dim</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
@@ -316,17 +294,23 @@
     <span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">dim</span><span class="p">]))</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
     <span class="n">loss_columns</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">y</span><span class="o">-</span><span class="n">truth</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">loss_columns</span><span class="p">,</span> <span class="kc">None</span></div>
+    <span class="k">return</span> <span class="n">loss_columns</span><span class="p">,</span> <span class="bp">None</span></div>
 
 
 <div class="viewcode-block" id="diag_mvn_loss"><a class="viewcode-back" href="../tf_ops.html#tf_ops.diag_mvn_loss">[docs]</a><span class="k">def</span> <span class="nf">diag_mvn_loss</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">variance_floor</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the output of a neural network after it&#39;s last activation, performs an affine transform.</span>
+<span class="sd">    It returns the mahalonobis distances between the targets and the result of the affine transformation, according</span>
+<span class="sd">    to a parametrized Normal distribution with diagonal covariance. The log of the determinant of the parametrized</span>
+<span class="sd">    covariance matrix is meant to be minimized to avoid a trivial optimization.</span>
 
-<span class="sd">    :param truth: (tf.Tensor) The truth for this minibatch.</span>
+<span class="sd">    :param truth: (tf.Tensor) The targets for this minibatch.</span>
 <span class="sd">    :param h:(tf.Tensor) The output of dnn.</span>
 <span class="sd">             (Here the output of dnn , h, is assumed to be the same dimension as truth)</span>
+<span class="sd">    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</span>
+<span class="sd">    tanh activation and sqrt(2/fan_in) for relu activation.</span>
 <span class="sd">    :param variance_floor: (float, positive) To ensure model doesn&#39;t find trivial optimization.</span>
-<span class="sd">    :return: (tf.Tensor) A vector of losses for each pair of vectors in truth, pair.</span>
+<span class="sd">    :return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fan_in</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">dim</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
@@ -341,17 +325,22 @@
     <span class="n">var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">var</span><span class="p">),</span>  <span class="c1"># make the variance non-negative</span>
                      <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">variance_floor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
     <span class="n">logdet</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">var</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># MB x 1</span>
-    <span class="n">loss_columns</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">truth</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">var</span>  <span class="c1"># is MB x D</span>
+    <span class="n">loss_columns</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">truth</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">var</span>  <span class="c1"># MB x D</span>
     <span class="k">return</span> <span class="n">loss_columns</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">logdet</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="full_mvn_loss"><a class="viewcode-back" href="../tf_ops.html#tf_ops.full_mvn_loss">[docs]</a><span class="k">def</span> <span class="nf">full_mvn_loss</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the output of a neural network after it&#39;s last activation, performs an affine transform.</span>
+<span class="sd">    It returns the mahalonobis distances between the targets and the result of the affine transformation, according</span>
+<span class="sd">    to a parametrized Normal distribution. The log of the determinant of the parametrized</span>
+<span class="sd">    covariance matrix is meant to be minimized to avoid a trivial optimization.</span>
 
 <span class="sd">    :param truth: Actual datapoints to compare against learned distribution</span>
 <span class="sd">    :param h: output of neural network (after last non-linear transform)</span>
-<span class="sd">    :param scale_range:</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</span>
+<span class="sd">    tanh activation and sqrt(2/fan_in) for relu activation.</span>
+<span class="sd">    :return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fan_in</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">dimension</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()</span>
@@ -364,7 +353,7 @@
     <span class="n">mu</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="p">])</span>  <span class="c1"># is MB x dimension</span>
     <span class="n">var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">dimension</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>  <span class="c1"># is MB x dimension^2</span>
     <span class="n">var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">dimension</span><span class="p">])</span>  <span class="c1"># make it a MB x D x D tensor (var is a superset of the lower triangular part of a Cholesky decomp)</span>
-    <span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_matrix_triangular_solve</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">truth</span> <span class="o">-</span> <span class="n">mu</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">adjoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># z should be MB x D</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">batch_matrix_triangular_solve</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">truth</span> <span class="o">-</span> <span class="n">mu</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">adjoint</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c1"># z should be MB x D</span>
     <span class="n">inner_prods</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">z</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># take row-wise inner products of z, leaving MB x 1 vector</span>
     <span class="n">logdet</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">batch_matrix_diag_part</span><span class="p">(</span><span class="n">var</span><span class="p">))),</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># diag_part converts MB x D x D to MB x D, square and log preserve, then sum makes MB x 1</span>
     <span class="n">loss_column</span> <span class="o">=</span> <span class="n">inner_prods</span>  <span class="c1"># is MB x 1 ... hard to track of individual features&#39; contributions due to correlations</span>
@@ -373,10 +362,9 @@
 
 <div class="viewcode-block" id="join_multivariate_inputs"><a class="viewcode-back" href="../tf_ops.html#tf_ops.join_multivariate_inputs">[docs]</a><span class="k">def</span> <span class="nf">join_multivariate_inputs</span><span class="p">(</span><span class="n">feature_spec</span><span class="p">,</span> <span class="n">specs</span><span class="p">,</span> <span class="n">embedding_ratio</span><span class="p">,</span> <span class="n">max_embedding</span><span class="p">,</span> <span class="n">min_embedding</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,</span>
+<span class="sd">    Makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,</span>
 <span class="sd">    and concatenates the resulting real-valued vectors from individual features into a single vector for each data point in the batch.</span>
 
-<span class="sd">    :param placeholderdict: A dict to store tf placeholders for feature inputs.</span>
 <span class="sd">    :param feature_spec: A dict {categorical: [c1, c2, ..., cp], continuous:[f1, f2, ...,fk]</span>
 <span class="sd">                        which lists which features to use as categorical and continuous inputs to the model.</span>
 <span class="sd">                        c1, ..., cp, f1, ...,fk should match a key in specs.</span>
@@ -399,14 +387,13 @@
         <span class="n">embedding_size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">embedding_ratio</span> <span class="o">*</span> <span class="n">specs</span><span class="p">[</span><span class="n">dataname</span><span class="p">][</span><span class="s1">&#39;num_classes&#39;</span><span class="p">])</span>
         <span class="n">embedding_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">max_embedding</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">),</span> <span class="n">min_embedding</span><span class="p">))</span>
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">dataname</span><span class="p">):</span>
-            <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">])</span>
-            <span class="n">embeddings</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">embedding_lookup</span><span class="p">(</span><span class="n">weights</span><span class="p">(</span><span class="s1">&#39;tnorm&#39;</span><span class="p">,</span>
-                                                                  <span class="p">(</span><span class="n">specs</span><span class="p">[</span><span class="n">dataname</span><span class="p">][</span><span class="s1">&#39;num_classes&#39;</span><span class="p">],</span>
-                                                                   <span class="n">embedding_size</span><span class="p">)),</span>
-                                                          <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">])</span>
+            <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">])</span>
+            <span class="n">embedding_matrix</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mf">1e-5</span><span class="o">*</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">((</span><span class="n">specs</span><span class="p">[</span><span class="n">dataname</span><span class="p">][</span><span class="s1">&#39;num_classes&#39;</span><span class="p">],</span> <span class="n">embedding_size</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+            <span class="c1"># embedding_matrix = weights(&#39;tnorm&#39;, (specs[dataname][&#39;num_classes&#39;], embedding_size))</span>
+            <span class="n">embeddings</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">embedding_lookup</span><span class="p">(</span><span class="n">embedding_matrix</span><span class="p">,</span> <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">])</span>
 
     <span class="k">for</span> <span class="n">dataname</span> <span class="ow">in</span> <span class="n">feature_spec</span><span class="p">[</span><span class="s1">&#39;continuous&#39;</span><span class="p">]:</span>
-        <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">[</span><span class="n">dataname</span><span class="p">])])</span>
+        <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">specs</span><span class="p">[</span><span class="n">dataname</span><span class="p">])])</span>
         <span class="n">continuous_features</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">=</span> <span class="n">placeholderdict</span><span class="p">[</span><span class="n">dataname</span><span class="p">]</span>
 
     <span class="c1"># concatenate all features</span>
@@ -415,7 +402,7 @@
 
 <div class="viewcode-block" id="multivariate_loss"><a class="viewcode-back" href="../tf_ops.html#tf_ops.multivariate_loss">[docs]</a><span class="k">def</span> <span class="nf">multivariate_loss</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">loss_spec</span><span class="p">,</span> <span class="n">placeholder_dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This function computes a multivariate loss according to loss_spec.</span>
+<span class="sd">    Computes a multivariate loss according to loss_spec.</span>
 
 <span class="sd">    :param h: Final hidden layer of dnn or rnn. (Post-activation)</span>
 <span class="sd">    :param loss_spec: A tuple of 3-tuples of the form (input_name, loss_function, dimension) where</span>
@@ -430,15 +417,15 @@
 <span class="sd">            loss_names is a list concatenated_feature_size long with names of all loss contributors.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log_det_list</span><span class="p">,</span> <span class="n">log_det_names</span><span class="p">,</span> <span class="n">loss_list</span><span class="p">,</span> <span class="n">loss_names</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;loss distributions:&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;loss distributions:&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">dimension</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loss_spec</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">dimension</span><span class="p">))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">dimension</span><span class="p">))</span>
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">input_name</span><span class="p">):</span>
             <span class="c1"># this input will be a (classification or regression) target - need to define a placeholder for it</span>
             <span class="k">if</span> <span class="n">loss_func</span> <span class="o">==</span> <span class="n">softmax_dist_loss</span><span class="p">:</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">dimension</span><span class="p">])</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">dimension</span><span class="p">])</span>
             <span class="n">placeholder_dict</span><span class="p">[</span><span class="s2">&quot;target_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
 
             <span class="c1"># predict this input from the current hidden state</span>
@@ -447,7 +434,7 @@
                 <span class="n">loss_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;loss_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">input_name</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span> <span class="c1"># continuous</span>
                 <span class="n">component_wise_point_loss</span><span class="p">,</span> <span class="n">logdet</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span><span class="c1"># MB X DIM_MULTIVARIATE, MB X 1</span>
-                <span class="k">if</span> <span class="n">logdet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">logdet</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
                     <span class="n">log_det_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logdet</span><span class="p">)</span>
                     <span class="n">log_det_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;loss_</span><span class="si">%s</span><span class="s2">.logdet&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">input_name</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">dimension</span><span class="p">):</span>

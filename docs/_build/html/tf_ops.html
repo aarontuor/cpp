@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="index.html"/>
         <link rel="next" title="np_ops" href="np_ops.html"/>
         <link rel="prev" title="About Safekit" href="index.html"/> 
@@ -88,10 +85,10 @@
             
             
                 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">tf_ops</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">tf_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="np_ops.html">np_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="batch.html">batch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generic_models.html">generic_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="graph_training_utils.html">graph_training_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">multivariate_dnn_autoencoder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
 </ul>
@@ -128,7 +125,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/tf_ops.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/tf_ops.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -140,9 +137,11 @@
             
   <div class="section" id="module-tf_ops">
 <span id="tf-ops"></span><h1>tf_ops<a class="headerlink" href="#module-tf_ops" title="Permalink to this headline">¶</a></h1>
+<p>Functions for building tensorflow computational graph models. RNN models,
+and tensorflow loss functions will be added to this module.</p>
 <dl class="function">
 <dt id="tf_ops.batch_normalize">
-<code class="descclassname">tf_ops.</code><code class="descname">batch_normalize</code><span class="sig-paren">(</span><em>tensor_in</em>, <em>epsilon=1e-05</em>, <em>decay=0.999</em>, <em>name='batch_norm'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#batch_normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.batch_normalize" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tf_ops.</code><code class="descname">batch_normalize</code><span class="sig-paren">(</span><em>tensor_in</em>, <em>epsilon=1e-05</em>, <em>decay=0.999</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#batch_normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.batch_normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Batch Normalization:
 <a href="#id1"><span class="problematic" id="id2">`Batch Normalization Accelerating Deep Network Training by Reducing Internal Covariate Shift`_</span></a></p>
 <p>An exponential moving average of means and variances in calculated to estimate sample mean
@@ -155,9 +154,9 @@ with [1] in feed_dict. Example:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>tensor_in</strong> &#8211; input <a href="#id3"><span class="problematic" id="id4">Tensor_</span></a></li>
+<li><strong>tensor_in</strong> &#8211; Input Tensor.</li>
 <li><strong>epsilon</strong> &#8211; A float number to avoid being divided by 0.</li>
-<li><strong>name</strong> &#8211; For <a href="#id5"><span class="problematic" id="id6">variable_scope_</span></a></li>
+<li><strong>decay</strong> &#8211; For exponential decay estimate of running mean and variance.</li>
 </ul>
 </td>
 </tr>
@@ -171,11 +170,15 @@ with [1] in feed_dict. Example:</p>
 <dl class="function">
 <dt id="tf_ops.diag_mvn_loss">
 <code class="descclassname">tf_ops.</code><code class="descname">diag_mvn_loss</code><span class="sig-paren">(</span><em>truth</em>, <em>h</em>, <em>scale_range=1.0</em>, <em>variance_floor=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#diag_mvn_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.diag_mvn_loss" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Takes the output of a neural network after it&#8217;s last activation, performs an affine transform.
+It returns the mahalonobis distances between the targets and the result of the affine transformation, according
+to a parametrized Normal distribution with diagonal covariance. The log of the determinant of the parametrized
+covariance matrix is meant to be minimized to avoid a trivial optimization.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>truth</strong> &#8211; (tf.Tensor) The truth for this minibatch.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>truth</strong> &#8211; (tf.Tensor) The targets for this minibatch.</td>
 </tr>
 </tbody>
 </table>
@@ -187,12 +190,13 @@ with [1] in feed_dict. Example:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>variance_floor</strong> &#8211; (float, positive) To ensure model doesn&#8217;t find trivial optimization.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(tf.Tensor) A vector of losses for each pair of vectors in truth, pair.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scale_range</strong> &#8211; For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</td>
 </tr>
 </tbody>
 </table>
+<p>tanh activation and sqrt(2/fan_in) for relu activation.
+:param variance_floor: (float, positive) To ensure model doesn&#8217;t find trivial optimization.
+:return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.</p>
 </dd></dl>
 
 <dl class="function">
@@ -207,7 +211,7 @@ with [1] in feed_dict. Example:</p>
 <li><strong>x</strong> &#8211; Input to the network.</li>
 <li><strong>layers</strong> &#8211; List of sizes of network layers.</li>
 <li><strong>act</strong> &#8211; Activation function to produce hidden layers of neural network.</li>
-<li><strong>scale_range</strong> &#8211; Scaling factor for initial range of weights (Set to 1/sqrt(fan_in).</li>
+<li><strong>scale_range</strong> &#8211; Scaling factor for initial range of weights (Set to 1/sqrt(fan_in) for tanh, sqrt(2/fan_in) for relu.</li>
 <li><strong>bn</strong> &#8211; Whether to use batch normalization.</li>
 <li><strong>keep_prob</strong> &#8211; The percent of nodes to keep in dropout layers.</li>
 <li><strong>name</strong> &#8211; For naming and variable scope.</li>
@@ -224,67 +228,69 @@ so that final activation has not been applied.</p>
 
 <dl class="function">
 <dt id="tf_ops.dropout">
-<code class="descclassname">tf_ops.</code><code class="descname">dropout</code><span class="sig-paren">(</span><em>tensor_in</em>, <em>prob</em>, <em>name='Dropout'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#dropout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.dropout" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tf_ops.</code><code class="descname">dropout</code><span class="sig-paren">(</span><em>tensor_in</em>, <em>prob</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#dropout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.dropout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds dropout node.
-:param tensor_in: Input <a href="#id7"><span class="problematic" id="id8">tensor_</span></a>.
+:param tensor_in: Input tensor.
 :param prob: The percent of units to keep.
-:param name: A name for the tensor.
-:return: <a href="#id9"><span class="problematic" id="id10">Tensor_</span></a> of the same shape of <em>tensor_in</em>.</p>
+:return: Tensor of the same shape of <em>tensor_in</em>.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="tf_ops.eyed_mvn_loss">
 <code class="descclassname">tf_ops.</code><code class="descname">eyed_mvn_loss</code><span class="sig-paren">(</span><em>truth</em>, <em>h</em>, <em>scale_range=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#eyed_mvn_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.eyed_mvn_loss" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>This function takes the output of a neural network after it&#8217;s last activation, performs an affine transform,
+and returns the squared error of this result and the target.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>truth</strong> &#8211; </li>
-<li><strong>h</strong> &#8211; </li>
-<li><strong>scale_range</strong> &#8211; </li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>truth</strong> &#8211; A tensor of target vectors.</li>
+<li><strong>h</strong> &#8211; The output of a neural network post activation.</li>
+<li><strong>scale_range</strong> &#8211; For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>
 </table>
+<p>tanh activation and sqrt(2/fan_in) for relu activation.
+:return: (tf.Tensor, None) squared_error, None</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="tf_ops.full_mvn_loss">
 <code class="descclassname">tf_ops.</code><code class="descname">full_mvn_loss</code><span class="sig-paren">(</span><em>truth</em>, <em>h</em>, <em>scale_range=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#full_mvn_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.full_mvn_loss" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
+<dd><p>Takes the output of a neural network after it&#8217;s last activation, performs an affine transform.
+It returns the mahalonobis distances between the targets and the result of the affine transformation, according
+to a parametrized Normal distribution. The log of the determinant of the parametrized
+covariance matrix is meant to be minimized to avoid a trivial optimization.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>truth</strong> &#8211; Actual datapoints to compare against learned distribution</li>
 <li><strong>h</strong> &#8211; output of neural network (after last non-linear transform)</li>
-<li><strong>scale_range</strong> &#8211; </li>
+<li><strong>scale_range</strong> &#8211; For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
 </td>
 </tr>
 </tbody>
 </table>
+<p>tanh activation and sqrt(2/fan_in) for relu activation.
+:return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="tf_ops.join_multivariate_inputs">
 <code class="descclassname">tf_ops.</code><code class="descname">join_multivariate_inputs</code><span class="sig-paren">(</span><em>feature_spec</em>, <em>specs</em>, <em>embedding_ratio</em>, <em>max_embedding</em>, <em>min_embedding</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#join_multivariate_inputs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.join_multivariate_inputs" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,
+<dd><p>Makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,
 and concatenates the resulting real-valued vectors from individual features into a single vector for each data point in the batch.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>placeholderdict</strong> &#8211; A dict to store tf placeholders for feature inputs.</li>
 <li><strong>feature_spec</strong> &#8211; A dict {categorical: [c1, c2, ..., cp], continuous:[f1, f2, ...,fk]
 which lists which features to use as categorical and continuous inputs to the model.
 c1, ..., cp, f1, ...,fk should match a key in specs.</li>
@@ -310,7 +316,7 @@ dict to store tf placeholders to pair with data, )</p>
 <dl class="function">
 <dt id="tf_ops.multivariate_loss">
 <code class="descclassname">tf_ops.</code><code class="descname">multivariate_loss</code><span class="sig-paren">(</span><em>h</em>, <em>loss_spec</em>, <em>placeholder_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#multivariate_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.multivariate_loss" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function computes a multivariate loss according to loss_spec.</p>
+<dd><p>Computes a multivariate loss according to loss_spec.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -341,48 +347,23 @@ loss_names is a list concatenated_feature_size long with names of all loss contr
 <dl class="function">
 <dt id="tf_ops.softmax_dist_loss">
 <code class="descclassname">tf_ops.</code><code class="descname">softmax_dist_loss</code><span class="sig-paren">(</span><em>truth</em>, <em>h</em>, <em>dimension</em>, <em>scale_range=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#softmax_dist_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.softmax_dist_loss" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>truth</strong> &#8211; </li>
-<li><strong>h</strong> &#8211; </li>
-<li><strong>scale_range</strong> &#8211; </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="tf_ops.weights">
-<code class="descclassname">tf_ops.</code><code class="descname">weights</code><span class="sig-paren">(</span><em>distribution</em>, <em>shape</em>, <em>dtype=tf.float32</em>, <em>initrange=1e-05</em>, <em>seed=None</em>, <em>l2=0.0</em>, <em>name='weights'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tf_ops.html#weights"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tf_ops.weights" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper parameterizing common constructions of tf.Variables.</p>
+<dd><p>This function paired with a tensorflow optimizer is multinomial logistic regression.
+It is designed for cotegorical predictions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>distribution</strong> &#8211; A string identifying distribution &#8216;tnorm&#8217; for truncated normal, &#8216;rnorm&#8217; for random normal, &#8216;constant&#8217; for constant, &#8216;uniform&#8217; for uniform.</li>
-<li><strong>shape</strong> &#8211; Shape of weight tensor.</li>
-<li><strong>dtype</strong> &#8211; dtype for weights</li>
-<li><strong>initrange</strong> &#8211; Scales standard normal and truncated normal, value of constant dist., and range of uniform dist. [-initrange, initrange].</li>
-<li><strong>seed</strong> &#8211; For reproducible results.</li>
-<li><strong>l2</strong> &#8211; Floating point number determining degree of of l2 regularization for these weights in gradient descent update.</li>
-<li><strong>name</strong> &#8211; For variable scope.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>truth</strong> &#8211; A tensorflow vector tensor of integer class labels.</li>
+<li><strong>h</strong> &#8211; A placeholder if doing simple multinomial logistic regression, or the output of some neural network.</li>
+<li><strong>scale_range</strong> &#8211; For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tf.Variable.</p>
 </td>
 </tr>
 </tbody>
 </table>
+<p>tanh activation and sqrt(2/fan_in) for relu activation.
+:return: Cross-entropy of true distribution vs. predicted distribution.</p>
 </dd></dl>
 
 </div>

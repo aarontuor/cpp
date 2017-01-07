@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
@@ -90,7 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tf_ops.html">tf_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../np_ops.html">np_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../batch.html">batch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generic_models.html">generic_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_training_utils.html">graph_training_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../models.html">multivariate_dnn_autoencoder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">features</a></li>
 </ul>
@@ -138,17 +135,23 @@
            <div itemprop="articleBody">
             
   <h1>Source code for np_ops</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module of numpy operations for tensorflow models. Handles transformations on the input and output of</span>
+<span class="sd">data to models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 
 
 <div class="viewcode-block" id="fan_scale"><a class="viewcode-back" href="../np_ops.html#np_ops.fan_scale">[docs]</a><span class="k">def</span> <span class="nf">fan_scale</span><span class="p">(</span><span class="n">initrange</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a scaling factor for weight initialization according to best practices.</span>
 
 <span class="sd">    :param initrange: Scaling in addition to fan_in scale.</span>
 <span class="sd">    :param activation: A tensorflow non-linear activation function</span>
 <span class="sd">    :param tensor_in: Input tensor to layer of network to scale weights for.</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :return: (float) scaling factor for weight initialization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">activation</span> <span class="o">==</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">:</span>
         <span class="n">initrange</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">tensor_in</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span><span class="o">.</span><span class="n">as_list</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>

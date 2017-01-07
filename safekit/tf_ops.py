@@ -1,40 +1,13 @@
+"""
+Functions for building tensorflow computational graph models. RNN models,
+and tensorflow loss functions will be added to this module.
+"""
+
 import tensorflow as tf
 import math
 from np_ops import fan_scale
 
-
-def weights(distribution, shape, dtype=tf.float32, initrange=1e-5,
-            seed=None, l2=0.0, name='weights'):
-    """
-    Wrapper parameterizing common constructions of tf.Variables.
-
-    :param distribution: A string identifying distribution 'tnorm' for truncated normal, 'rnorm' for random normal, 'constant' for constant, 'uniform' for uniform.
-    :param shape: Shape of weight tensor.
-    :param dtype: dtype for weights
-    :param initrange: Scales standard normal and truncated normal, value of constant dist., and range of uniform dist. [-initrange, initrange].
-    :param seed: For reproducible results.
-    :param l2: Floating point number determining degree of of l2 regularization for these weights in gradient descent update.
-    :param name: For variable scope.
-    :return: A tf.Variable.
-    """
-
-    if distribution == 'norm':
-        wghts = tf.Variable(initrange*tf.random_normal(shape, 0, 1, dtype, seed))
-    elif distribution == 'tnorm':
-        wghts = tf.Variable(initrange*tf.truncated_normal(shape, 0, 1, dtype, seed))
-    elif distribution == 'uniform':
-        wghts = tf.Variable(tf.random_uniform(shape, -initrange, initrange, dtype, seed))
-    elif distribution == 'constant':
-        wghts = tf.Variable(tf.constant(initrange, dtype=dtype, shape=shape))
-    else:
-        raise ValueError("Argument 'distribution takes values 'norm', 'tnorm', 'uniform', 'constant', "
-                          "Received %s" % distribution)
-    if l2 != 0.0:
-        tf.add_to_collection('losses', tf.mul(tf.nn.l2_loss(wghts), l2, name=name + 'weight_loss'))
-    return wghts
-
-
-def batch_normalize(tensor_in, epsilon=1e-5, decay=0.999, name="batch_norm"):
+def batch_normalize(tensor_in, epsilon=1e-5, decay=0.999):
     """
     Batch Normalization:
     `Batch Normalization Accelerating Deep Network Training by Reducing Internal Covariate Shift`_
@@ -50,9 +23,9 @@ def batch_normalize(tensor_in, epsilon=1e-5, decay=0.999, name="batch_norm"):
         bn_deciders = {decider:[train] for decider in tf.get_collection('bn_deciders')}
         feed_dict.update(bn_deciders)
 
-    :param tensor_in: input Tensor_
+    :param tensor_in: Input Tensor.
     :param epsilon: A float number to avoid being divided by 0.
-    :param name: For variable_scope_
+    :param decay: For exponential decay estimate of running mean and variance.
     :return: Tensor with variance bounded by a unit and mean of zero according to the batch.
     """
 
@@ -66,7 +39,7 @@ def batch_normalize(tensor_in, epsilon=1e-5, decay=0.999, name="batch_norm"):
     pop_var = tf.Variable(tf.ones([tensor_in.get_shape()[-1]]), trainable=False)
 
     # calculate batch mean/var and running mean/var
-    batch_mean, batch_variance = tf.nn.moments(tensor_in, [0], name=name)
+    batch_mean, batch_variance = tf.nn.moments(tensor_in, [0])
 
     # The running mean/variance is updated when is_training == 1.
     running_mean = tf.assign(pop_mean,
@@ -81,23 +54,22 @@ def batch_normalize(tensor_in, epsilon=1e-5, decay=0.999, name="batch_norm"):
     variance = tf.nn.embedding_lookup(tf.pack([running_var, batch_variance]), is_training)
 
     shape = tensor_in.get_shape().as_list()
-    gamma = weights('constant', [shape[1]], initrange=0.0, name=name + '_gamma')
-    beta = weights('constant', [shape[1]], initrange=1.0, name=name + '_beta')
+    gamma = tf.Variable(tf.constant(0.0, dtype=tf.float32, shape=[shape[1]], name='gamma'))
+    beta = tf.Variable(tf.constant(1.0, dtype=tf.float32, shape=[shape[1]], name='beta'))
 
     # Batch Norm Transform
-    inv = tf.rsqrt(epsilon + variance, name=name)
+    inv = tf.rsqrt(epsilon + variance)
     tensor_in = beta * (tensor_in - mean) * inv + gamma
 
     return tensor_in
 
 
-def dropout(tensor_in, prob, name='Dropout'):
+def dropout(tensor_in, prob):
     """
     Adds dropout node.
-    :param tensor_in: Input tensor_.
+    :param tensor_in: Input tensor.
     :param prob: The percent of units to keep.
-    :param name: A name for the tensor.
-    :return: Tensor_ of the same shape of *tensor_in*.
+    :return: Tensor of the same shape of *tensor_in*.
     """
     if isinstance(prob, float):
         keep_prob = tf.placeholder(tf.float32)
@@ -112,7 +84,7 @@ def dnn(x, layers=[100, 408], act=tf.nn.relu, scale_range=1.0, bn=False, keep_pr
     :param x: Input to the network.
     :param layers: List of sizes of network layers.
     :param act: Activation function to produce hidden layers of neural network.
-    :param scale_range: Scaling factor for initial range of weights (Set to 1/sqrt(fan_in).
+    :param scale_range: Scaling factor for initial range of weights (Set to 1/sqrt(fan_in) for tanh, sqrt(2/fan_in) for relu.
     :param bn: Whether to use batch normalization.
     :param keep_prob: The percent of nodes to keep in dropout layers.
     :param name: For naming and variable scope.
@@ -133,21 +105,27 @@ def dnn(x, layers=[100, 408], act=tf.nn.relu, scale_range=1.0, bn=False, keep_pr
             tf.add_to_collection(name + '_bias', b)
             x = tf.matmul(x,W) + b
             if bn:
-                x = batch_normalize(x, name=name + '_bn')
+                x = batch_normalize(x)
             x = act(x, name='h' + str(ind)) # The hidden layer
             tf.add_to_collection(name + '_activation', x)
             if keep_prob:
-                x = dropout(x, keep_prob, name=name + '_dropouts')
+                x = dropout(x, keep_prob)
     return x
 
+# ============================================================
+# ================ LOSS FUNCTIONS ============================
+# ============================================================
 
 def softmax_dist_loss(truth, h, dimension, scale_range=1.0):
     """
+    This function paired with a tensorflow optimizer is multinomial logistic regression.
+    It is designed for cotegorical predictions.
 
-    :param truth:
-    :param h:
-    :param scale_range:
-    :return:
+    :param truth: A tensorflow vector tensor of integer class labels.
+    :param h: A placeholder if doing simple multinomial logistic regression, or the output of some neural network.
+    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for
+    tanh activation and sqrt(2/fan_in) for relu activation.
+    :return: Cross-entropy of true distribution vs. predicted distribution.
     """
     fan_in = h.get_shape().as_list()[1]
     U = tf.Variable(fan_scale(scale_range, tf.tanh, h) * tf.truncated_normal([fan_in, dimension],
@@ -163,11 +141,14 @@ def softmax_dist_loss(truth, h, dimension, scale_range=1.0):
 
 def eyed_mvn_loss(truth, h, scale_range=1.0):
     """
+    This function takes the output of a neural network after it's last activation, performs an affine transform,
+    and returns the squared error of this result and the target.
 
-    :param truth:
-    :param h:
-    :param scale_range:
-    :return:
+    :param truth: A tensor of target vectors.
+    :param h: The output of a neural network post activation.
+    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for
+    tanh activation and sqrt(2/fan_in) for relu activation.
+    :return: (tf.Tensor, None) squared_error, None
     """
     fan_in = h.get_shape().as_list()[1]
     dim = truth.get_shape().as_list()[1]
@@ -181,12 +162,18 @@ def eyed_mvn_loss(truth, h, scale_range=1.0):
 
 def diag_mvn_loss(truth, h, scale_range=1.0, variance_floor=0.1):
     """
+    Takes the output of a neural network after it's last activation, performs an affine transform.
+    It returns the mahalonobis distances between the targets and the result of the affine transformation, according
+    to a parametrized Normal distribution with diagonal covariance. The log of the determinant of the parametrized
+    covariance matrix is meant to be minimized to avoid a trivial optimization.
 
-    :param truth: (tf.Tensor) The truth for this minibatch.
+    :param truth: (tf.Tensor) The targets for this minibatch.
     :param h:(tf.Tensor) The output of dnn.
              (Here the output of dnn , h, is assumed to be the same dimension as truth)
+    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for
+    tanh activation and sqrt(2/fan_in) for relu activation.
     :param variance_floor: (float, positive) To ensure model doesn't find trivial optimization.
-    :return: (tf.Tensor) A vector of losses for each pair of vectors in truth, pair.
+    :return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.
     """
     fan_in = h.get_shape().as_list()[1]
     dim = truth.get_shape().as_list()[1]
@@ -201,17 +188,22 @@ def diag_mvn_loss(truth, h, scale_range=1.0, variance_floor=0.1):
     var = tf.maximum(tf.exp(var),  # make the variance non-negative
                      tf.constant(variance_floor, shape=[dim], dtype=tf.float32))
     logdet = tf.reduce_sum(tf.log(var), 1)  # MB x 1
-    loss_columns = tf.square(truth - mu) / var  # is MB x D
+    loss_columns = tf.square(truth - mu) / var  # MB x D
     return loss_columns, tf.reshape(logdet, [-1, 1])
 
 
 def full_mvn_loss(truth, h, scale_range=1.0):
     """
+    Takes the output of a neural network after it's last activation, performs an affine transform.
+    It returns the mahalonobis distances between the targets and the result of the affine transformation, according
+    to a parametrized Normal distribution. The log of the determinant of the parametrized
+    covariance matrix is meant to be minimized to avoid a trivial optimization.
 
     :param truth: Actual datapoints to compare against learned distribution
     :param h: output of neural network (after last non-linear transform)
-    :param scale_range:
-    :return:
+    :param scale_range: For scaling the weight matrices (by default weights are initialized two 1/sqrt(fan_in)) for
+    tanh activation and sqrt(2/fan_in) for relu activation.
+    :return: (tf.Tensor, tf.Tensor) Loss matrix, log_of_determinants of covariance matrices.
     """
     fan_in = h.get_shape().as_list()[1]
     dimension = truth.get_shape().as_list()
@@ -233,10 +225,9 @@ def full_mvn_loss(truth, h, scale_range=1.0):
 
 def join_multivariate_inputs(feature_spec, specs, embedding_ratio, max_embedding, min_embedding):
     """
-    This function makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,
+    Makes placeholders for all input data, performs a lookup on an embedding matrix for each categorical feature,
     and concatenates the resulting real-valued vectors from individual features into a single vector for each data point in the batch.
 
-    :param placeholderdict: A dict to store tf placeholders for feature inputs.
     :param feature_spec: A dict {categorical: [c1, c2, ..., cp], continuous:[f1, f2, ...,fk]
                         which lists which features to use as categorical and continuous inputs to the model.
                         c1, ..., cp, f1, ...,fk should match a key in specs.
@@ -260,10 +251,9 @@ def join_multivariate_inputs(feature_spec, specs, embedding_ratio, max_embedding
         embedding_size = int(max(min(max_embedding, embedding_size), min_embedding))
         with tf.variable_scope(dataname):
             placeholderdict[dataname] = tf.placeholder(tf.int32, [None])
-            embeddings[dataname] = tf.nn.embedding_lookup(weights('tnorm',
-                                                                  (specs[dataname]['num_classes'],
-                                                                   embedding_size)),
-                                                          placeholderdict[dataname])
+            embedding_matrix = tf.Variable(1e-5*tf.truncated_normal((specs[dataname]['num_classes'], embedding_size), dtype=tf.float32))
+            # embedding_matrix = weights('tnorm', (specs[dataname]['num_classes'], embedding_size))
+            embeddings[dataname] = tf.nn.embedding_lookup(embedding_matrix, placeholderdict[dataname])
 
     for dataname in feature_spec['continuous']:
         placeholderdict[dataname] = tf.placeholder(tf.float32, [None, len(specs[dataname])])
@@ -275,7 +265,7 @@ def join_multivariate_inputs(feature_spec, specs, embedding_ratio, max_embedding
 
 def multivariate_loss(h, loss_spec, placeholder_dict):
     """
-    This function computes a multivariate loss according to loss_spec.
+    Computes a multivariate loss according to loss_spec.
 
     :param h: Final hidden layer of dnn or rnn. (Post-activation)
     :param loss_spec: A tuple of 3-tuples of the form (input_name, loss_function, dimension) where

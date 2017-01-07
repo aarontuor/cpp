@@ -1,7 +1,15 @@
-import numpy as np
-import json
+"""
+Module for mini-batching data. At this stage of development batch.py has only one batcher class
+but several more will be added for rnn models taking multivariate stream input (sequences will need 3-way arrays),
+batching over several epochs, etc. Also, new batch splitting functions will be added for data applications on
+as case by case basis.
 
-class OnlineBatcher():
+"""
+
+import numpy as np
+
+
+class OnlineBatcher:
     """
     For batching data too large to fit into memory. Written for one pass on data!!!
     """
@@ -39,9 +47,10 @@ class OnlineBatcher():
         self.index += self.batch_size
         return data
 
+
 def split_batch(batch, spec):
     """
-    :param batch: An assembled 3 way array of data collected from the stream with shape (num_time_steps, num_users, num_features)
+    :param batch: A numpy array of data collected from the stream with shape (batch_size, num_features)
     :param specs: A python dict containing information about which indices in the incoming data point correspond to which features.
                   Entries for continuous features list the indices for the feature, while entries for categorical features
                   contain a dictionary- {'index': i, 'num_classes': c}, where i and c are the index into the datapoint, and number of distinct

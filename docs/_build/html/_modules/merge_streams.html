@@ -30,9 +30,6 @@
   
 
   
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
@@ -90,7 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../tf_ops.html">tf_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../np_ops.html">np_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../batch.html">batch</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../generic_models.html">generic_models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../graph_training_utils.html">graph_training_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../models.html">multivariate_dnn_autoencoder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">features</a></li>
 </ul>
@@ -138,7 +135,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for merge_streams</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
 
 <div class="viewcode-block" id="Merge"><a class="viewcode-back" href="../features.html#merge_streams.Merge">[docs]</a><span class="k">class</span> <span class="nc">Merge</span><span class="p">:</span>
@@ -224,7 +221,7 @@
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :return: (tuple) filename, Next event (line from file split on delimiter) according to time stamp.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
             <span class="n">least_time_event</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sort_function</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">event_type</span> <span class="o">=</span> <span class="n">least_time_event</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_list</span><span class="p">[</span><span class="n">event_type</span><span class="p">],</span> <span class="n">least_time_event</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>

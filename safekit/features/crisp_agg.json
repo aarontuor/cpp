@@ -1,0 +1,1 @@
+{"category": {"index": 6, "num_classes": 4}, "time": [0], "proto": {"index": 5, "num_classes": 3}, "num_features": 9, "continuous": [8], "deployment": {"index": 7, "num_classes": 1}, "daddr": {"index": 3, "num_classes": 4}, "weekday": {"index": 1, "num_classes": 7}, "saddr": {"index": 2, "num_classes": 1}, "dport": {"index": 4, "num_classes": 4}}

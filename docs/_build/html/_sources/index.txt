@@ -21,7 +21,7 @@ Core Modules
 
     :any:`batch`
 
-    :any:`generic_models`
+    :any:`graph_training_utils`
 
 Supplementary packages
 ----------------------
@@ -33,9 +33,18 @@ Supplementary packages
 Dependencies
 ===============
 
+This toolkit was written using tensorflow version 12 (the latest) and numpy. The latest version of tensorflow should
+be installed in a virtual environment. I recommend labelling the virtualenv with the tensorflow version number as
+the tensorflow distribution is volatile as of late.
+
 Installation
 =============
 
+Clone the repo from github. From the top level directory run:
+
+.. code-block:: bash
+
+    $ python setup.py develop
 
 Documentation
 =============
@@ -47,7 +56,7 @@ Documentation
    tf_ops.rst
    np_ops.rst
    batch.rst
-   generic_models.rst
+   graph_training_utils.rst
    models.rst
    features.rst
 
