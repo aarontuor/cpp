@@ -30,6 +30,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="safekit 0.01 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
@@ -88,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../np_ops.html">np_ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../batch.html">batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../graph_training_utils.html">graph_training_utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../models.html">multivariate_dnn_autoencoder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../models.html">models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">features</a></li>
 </ul>
 
@@ -135,13 +138,13 @@
            <div itemprop="articleBody">
             
   <h1>Source code for np_ops</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Module of numpy operations for tensorflow models. Handles transformations on the input and output of</span>
 <span class="sd">data to models.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="kn">as</span> <span class="nn">tf</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
 <div class="viewcode-block" id="fan_scale"><a class="viewcode-back" href="../np_ops.html#np_ops.fan_scale">[docs]</a><span class="k">def</span> <span class="nf">fan_scale</span><span class="p">(</span><span class="n">initrange</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span> <span class="n">tensor_in</span><span class="p">):</span>

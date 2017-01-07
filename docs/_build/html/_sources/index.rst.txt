@@ -3,15 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. papers
+
+.. _Deep Learning for Unsupervised Insider Threat Detection in Structured Cybersecurity Data Streams: https://studentweb.cs.wwu.edu/~tuora/aarontuor/materials/anomaly_detection.pdf
+
+
 About Safekit
 =============
 Safekit is a python software distribution for anomaly detection from multivariate streams,
-developed for the AIMSAFE initiative at Pacific Northwest National Laboratory.
-It should have a better name, so any suggestions are welcome.
+developed for the AIMSAFE initiative at Pacific Northwest National Laboratory. It should have a better name, so any suggestions are welcome.
+An exposition of the models in this package can be found in the paper:
+
+`Deep Learning for Unsupervised Insider Threat Detection in Structured Cybersecurity Data Streams`_
+
 The code of the toolkit is written in python using the tensorflow deep learning
 toolkit and numpy.
-The toolkit is comprised of four core modules and two supplementary packages.
-In this introduction we will discuss each of these components.
 
 Core Modules
 ------------

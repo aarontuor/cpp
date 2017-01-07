@@ -15,6 +15,11 @@ from safekit.tf_ops import join_multivariate_inputs, dnn, softmax_dist_loss, dia
 
 
 def return_parser():
+    """
+    Defines and returns argparse ArgumentParser object.
+
+    :return: ArgumentParser
+    """
     parser = argparse.ArgumentParser("Dnn auto-encoder for online unsupervised training.")
     parser.add_argument('datafile',
                         type=str,
@@ -47,6 +52,7 @@ def return_parser():
 def write_results(datadict, pointloss, outfile):
     """
     Writes loss for each datapoint, along with meta-data to file.
+
     :param datadict: Dictionary of data names (str) keys to numpy matrix values for this mini-batch.
     :param pointloss: MB X 1 numpy array
     :param outfile: Where to write results.

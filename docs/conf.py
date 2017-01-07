@@ -19,10 +19,10 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
-sys.path.append(os.path.abspath('sphinxext')) # lets python know where to find your sphinx extensions
-sys.path.append(os.path.abspath('../safekit/')) # This is so sphinx knows where to find your module
-sys.path.append(os.path.abspath('../safekit/models/')) # This is so sphinx knows where to find your module
-sys.path.append(os.path.abspath('../safekit/features/')) # This is so sphinx knows where to find your module
+sys.path.insert(1, os.path.abspath('sphinxext')) # lets python know where to find your sphinx extensions
+sys.path.insert(1, os.path.abspath('../safekit/')) # This is so sphinx knows where to find your module
+sys.path.insert(1, os.path.abspath('../safekit/models/')) # This is so sphinx knows where to find your module
+sys.path.insert(1, os.path.abspath('../safekit/features/')) # This is so sphinx knows where to find your module
 html_logo = '_static/eye.png' # adds logo to documents pages.
 # -- General configuration ------------------------------------------------
 
