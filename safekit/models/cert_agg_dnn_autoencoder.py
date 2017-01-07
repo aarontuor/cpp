@@ -124,7 +124,10 @@ if __name__ == '__main__':
                  ('ocean', mvn, len(dataspecs['ocean'])),
                  ('counts', mvn, len(dataspecs['counts']))]
 
-    loss, loss_vector, loss_matrix, loss_names = multivariate_loss(h, loss_spec, ph_dict)
+    loss_matrix = multivariate_loss(h, loss_spec, ph_dict)
+    loss_vector = tf.reduce_sum(loss_matrix, reduction_indices=1)  # is MB x 1
+    loss = tf.reduce_mean(loss_vector)  # is scalar
+
     eval_tensors = [loss, loss_vector, loss_matrix]
     model = ModelRunner(loss, ph_dict, learnrate=args.learnrate, opt='adam', debug=args.debug)
     raw_batch = data.next_batch()
