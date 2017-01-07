@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="a0c70864-7a2d-4de8-b287-ad9b2c3b6eae" name="Default" comment="" />
+    <list default="true" id="a0c70864-7a2d-4de8-b287-ad9b2c3b6eae" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/safekit/models/cert_dnn_auto_results/cpp_mv_auto_lr_0.001_nl_3_hs_100_mb_256_bn_False_kp_0.75_ds_diag_bc_20_em_0.75" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/safekit/models/cert_dnn_auto_results/cpp_mv_auto_lr_0.001_nl_3_hs_100_mb_256_bn_False_kp_None_ds_diag_bc_20_em_0.75" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/safekit/models/cert_dnn_auto_results/cpp_mv_auto_lr_0.001_nl_3_hs_100_mb_256_bn_True_kp_None_ds_diag_bc_20_em_0.75" afterPath="" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -240,28 +244,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="models" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="cpp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="cpp" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="safekit" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="models" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="cert_dnn_auto_results" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
