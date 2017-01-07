@@ -46,6 +46,14 @@ Clone the repo from github. From the top level directory run:
 
     $ python setup.py develop
 
+To test your build acquire a copy of `no_weekends_reordered.csv` place it in the cpp/safekit/models directory
+and from the cpp/safekit/models directory run:
+
+.. code-block:: bash
+
+    $ mkdir cert_dnn_auto_results
+    $ python cert_agg_dnn_autoencoder.py no_weekends_reordered.csv cert_dnn_auto_results ../features/cert_agg_no_weekends.json
+
 Documentation
 =============
 

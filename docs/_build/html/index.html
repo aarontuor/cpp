@@ -112,7 +112,7 @@
         <div class="rst-content">
           
 
- 
+
 
 
 
@@ -169,7 +169,13 @@ the tensorflow distribution is volatile as of late.</p>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>Clone the repo from github. From the top level directory run:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>$ python setup.py develop
+<div class="highlight-bash"><div class="highlight"><pre>$ python setup.py develop
+</pre></div>
+</div>
+<p>To test your build acquire a copy of <cite>no_weekends_reordered.csv</cite> place it in the cpp/safekit/models directory
+and from the cpp/safekit/models directory run:</p>
+<div class="highlight-bash"><div class="highlight"><pre>$ mkdir cert_dnn_auto_results
+$ python cert_agg_dnn_autoencoder.py no_weekends_reordered.csv cert_dnn_auto_results ../features/cert_agg_no_weekends.json
 </pre></div>
 </div>
 </div>
