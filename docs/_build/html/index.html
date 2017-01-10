@@ -148,17 +148,21 @@ toolkit and numpy.</p>
 <div class="section" id="core-modules">
 <h2>Core Modules<a class="headerlink" href="#core-modules" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><p><a class="reference internal" href="tf_ops.html"><span class="doc">tf_ops</span></a></p>
-<p><a class="reference internal" href="np_ops.html"><span class="doc">np_ops</span></a></p>
-<p><a class="reference internal" href="batch.html"><span class="doc">batch</span></a></p>
-<p><a class="reference internal" href="graph_training_utils.html"><span class="doc">graph_training_utils</span></a></p>
+<div><p><a class="reference internal" href="tf_ops.html"><span class="doc">tf_ops</span></a>: Functions for building tensorflow computational graph models.</p>
+<p><a class="reference internal" href="np_ops.html"><span class="doc">np_ops</span></a>: Module of numpy operations for tensorflow models. Handles transformations on the input and output of</p>
+</div></blockquote>
+<p>data to models.</p>
+<blockquote>
+<div><p><a class="reference internal" href="batch.html"><span class="doc">batch</span></a>: Module for mini-batching data.</p>
+<p><a class="reference internal" href="graph_training_utils.html"><span class="doc">graph_training_utils</span></a>: Utilities for training the parameters of tensorflow computational graphs.</p>
+<p><code class="xref any docutils literal"><span class="pre">util</span></code>: Python utility functions.</p>
 </div></blockquote>
 </div>
 <div class="section" id="supplementary-packages">
 <h2>Supplementary packages<a class="headerlink" href="#supplementary-packages" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><p><a class="reference internal" href="features.html"><span class="doc">features</span></a></p>
-<p><a class="reference internal" href="models.html"><span class="doc">models</span></a></p>
+<div><p><a class="reference internal" href="features.html"><span class="doc">features</span></a>: Modules for feature derivation of various data sets.</p>
+<p><a class="reference internal" href="models.html"><span class="doc">models</span></a>: Models implemented for various data sets.</p>
 </div></blockquote>
 </div>
 </div>
@@ -194,9 +198,17 @@ $ python cert_agg_dnn_autoencoder.py no_weekends_reordered.csv cert_dnn_auto_res
 <li class="toctree-l2"><a class="reference internal" href="models.html#cert-agg-dnn-autoencoder-command-line">cert_agg_dnn_autoencoder (command line)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="features.html#module-merge_streams">merge_streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#module-maps">maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="features.html#crisp-agg-feats">crisp_agg_feats</a></li>
+</ul>
+</li>
 </ul>
 </div>
+</div>
+<div class="section" id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>

@@ -1,6 +1,8 @@
 models
 ======
 
+Models implemented for various data sets.
+
 cert_agg_dnn_autoencoder (functions)
 ------------------------------------
 .. automodule:: cert_agg_dnn_autoencoder

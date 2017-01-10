@@ -21,20 +21,23 @@ toolkit and numpy.
 
 Core Modules
 ------------
-    :any:`tf_ops`
+    :any:`tf_ops`: Functions for building tensorflow computational graph models.
 
-    :any:`np_ops`
+    :any:`np_ops`: Module of numpy operations for tensorflow models. Handles transformations on the input and output of
+data to models.
 
-    :any:`batch`
+    :any:`batch`: Module for mini-batching data.
 
-    :any:`graph_training_utils`
+    :any:`graph_training_utils`: Utilities for training the parameters of tensorflow computational graphs.
+
+    :any:`util`: Python utility functions.
 
 Supplementary packages
 ----------------------
 
-    :any:`features`
+    :any:`features`: Modules for feature derivation of various data sets.
 
-    :any:`models`
+    :any:`models`: Models implemented for various data sets.
 
 Dependencies
 ===============
@@ -73,6 +76,9 @@ Documentation
    graph_training_utils.rst
    models.rst
    features.rst
+
+Contributing
+============
 
 
 Indices and tables

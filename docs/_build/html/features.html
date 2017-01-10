@@ -92,7 +92,12 @@
 <li class="toctree-l1"><a class="reference internal" href="batch.html">batch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="graph_training_utils.html">graph_training_utils</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">models</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-merge_streams">merge_streams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-maps">maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#crisp-agg-feats">crisp_agg_feats</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -137,8 +142,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-merge_streams">
-<span id="features"></span><h1>features<a class="headerlink" href="#module-merge_streams" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="features">
+<h1>features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<p>Modules for feature derivation of various data sets.</p>
+<div class="section" id="module-merge_streams">
+<span id="merge-streams"></span><h2>merge_streams<a class="headerlink" href="#module-merge_streams" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="merge_streams.Merge">
 <em class="property">class </em><code class="descclassname">merge_streams.</code><code class="descname">Merge</code><span class="sig-paren">(</span><em>filepath='./', file_list=['short_t_toy_auth.txt', 'short_t_toy_proc.txt'], sort_column='time', date_format='int', delimiter=','</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/merge_streams.html#Merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#merge_streams.Merge" title="Permalink to this definition">¶</a></dt>
@@ -169,23 +177,6 @@ removed from lists (determined by appended event_type int).</li>
 </ol>
 </dd>
 </dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Examples:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-<p>&gt;&gt;&gt;import merge_streams
-&gt;&gt;&gt;data = merge_streams.Merge(file_list=[&#8216;short_t_toy_auth.txt&#8217;, &#8216;short_t_toy_proc.txt&#8217;],</p>
-<blockquote>
-<div>sort_column=&#8217;time&#8217;, delimiter=&#8217;,&#8217;)</div></blockquote>
-<p>&gt;&gt;&gt;for event_type, event in data():
-...    print(&#8216;event_type: %s event: %s&#8217; % (event_type, event))
-event_type:short_t_toy_auth.txt event:[&#8216;1&#8217;, &#8216;U7&#64;DOM1&#8217;, &#8216;U6&#64;DOM1&#8217;, &#8216;C606&#8217;, &#8216;C606&#8217;, &#8216;?&#8217;, &#8216;?&#8217;, &#8216;AuthMap&#8217;, &#8216;Success&#8217;]
-....
-event_type:short_t_toy_auth.txt event:[&#8216;3&#8217;, &#8216;U7&#64;DOM1&#8217;, &#8216;U6&#64;DOM1&#8217;, &#8216;C1183&#8217;, &#8216;C1183&#8217;, &#8216;?&#8217;, &#8216;?&#8217;, &#8216;AuthMap&#8217;, &#8216;Success&#8217;]</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -231,6 +222,81 @@ event_type:short_t_toy_auth.txt event:[&#8216;3&#8217;, &#8216;U7&#64;DOM1&#8217
 
 </dd></dl>
 
+</div>
+<div class="section" id="module-maps">
+<span id="maps"></span><h2>maps<a class="headerlink" href="#module-maps" title="Permalink to this headline">¶</a></h2>
+<p>Classes for mapping raw csv to numeric csv of input features.
+Classes may perform one to one, many to one, one to many, or many to many mapping,
+i.e. they may map a csv field to one input value, more than one csv field to one input value,
+more than one csv field to more than one input values, or one csv field to more than one input value.
+Each class for mapping to a real valued input has a type, and name property,
+while classes for mapping categorical input have an additional num_classes property where:
+numclasses is a list of the number of classes for each output value.
+type is a list of the types of input values being returned (supported types are &#8216;categorical&#8217;, &#8216;continuous&#8217;, and &#8216;meta&#8217;
+name is a list of names for making the header of the csv file of derived numeric inputs.
+Call functions return a string representation fo the numeric value.</p>
+<dl class="class">
+<dt id="maps.Cat">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">Cat</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#Cat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.Cat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps categories to integer ids.</p>
+<dl class="attribute">
+<dt id="maps.Cat.num_classes">
+<code class="descname">num_classes</code><a class="headerlink" href="#maps.Cat.num_classes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="maps.DateTimeToHourWeekday">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">DateTimeToHourWeekday</code><span class="sig-paren">(</span><em>date_format</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#DateTimeToHourWeekday"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.DateTimeToHourWeekday" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a date time, returns the hour and week day.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="maps.DateToWeekday">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">DateToWeekday</code><span class="sig-paren">(</span><em>date_format</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#DateToWeekday"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.DateToWeekday" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a date, returns the weekday.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="maps.Ident">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">Ident</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#Ident"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.Ident" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whatever it is handed.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="maps.Time">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">Time</code><span class="sig-paren">(</span><em>date_format</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#Time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.Time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a string describing the formatting of a date, returns the date as an integer with the day as the least
+significant digits, the month as the next most significant digits and the year as the most significant digits.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="maps.TimeDifference">
+<em class="property">class </em><code class="descclassname">maps.</code><code class="descname">TimeDifference</code><span class="sig-paren">(</span><em>date_format</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/maps.html#TimeDifference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#maps.TimeDifference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given two date times and their corresponding formats, returns the difference between these date times in seconds.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="crisp-agg-feats">
+<h2>crisp_agg_feats<a class="headerlink" href="#crisp-agg-feats" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">crisp_agg_feats</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">outfile</span> <span class="n">OUTFILE</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-outfile</span></kbd></td>
+<td>Where to write derived features.</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
 </div>
 
 
